@@ -1,0 +1,54 @@
+.sidebar {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Align items to the start (left) */
+}
+
+.sidebar__logo {
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.sidebarOption {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 30px;
+  transition: background-color 0.2s;
+  margin-bottom: 5px;
+}
+
+.sidebarOption:hover {
+  background-color: #181818; /* A slightly lighter black for hover */
+}
+
+.sidebarOption h2 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 0 20px;
+}
+
+/* Make the "Home" text bold to show it's active */
+.sidebarOption:first-of-type h2 {
+    font-weight: 700;
+}
+
+.sidebar__post {
+  background-color: #1d9bf0;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-radius: 30px;
+  height: 52px;
+  width: 100%; /* Make button fill the sidebar width */
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sidebar__post:hover {
+  background-color: #0364d3; 
+}

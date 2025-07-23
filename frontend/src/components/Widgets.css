@@ -1,0 +1,84 @@
+.widgets {
+  padding: 10px 20px;
+}
+
+/* Search Bar Styles */
+.widgets__search {
+  display: flex;
+  align-items: center;
+  background-color: #202327; /* Dark gray background */
+  padding: 10px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.widgets__search-icon {
+  color: gray;
+}
+
+.widgets__search > input {
+  border: none;
+  background-color: transparent;
+  margin-left: 10px;
+  color: white;
+  font-size: 16px;
+  width: 100%;
+}
+
+.widgets__search > input:focus {
+  outline: none;
+}
+
+/* "What's happening" Container Styles */
+.widgets__container {
+  background-color: #16181c; /* Slightly different dark gray */
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.widgets__container > h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-top: 0;
+}
+
+/* Individual Trend Styles */
+.widgets__trend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  cursor: pointer;
+  border-bottom: 1px solid #2f3336;
+  transition: background-color 0.2s;
+}
+.widgets__trend:last-of-type {
+    border-bottom: none;
+}
+
+.widgets__trend:hover {
+  background-color: #1d1f23;
+}
+
+.widgets__trend-info > span {
+  font-size: 14px;
+  color: gray;
+}
+
+.widgets__trend-info > h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 2px 0;
+}
+
+.widgets__trend > svg {
+    color: gray;
+}
+
+.widgets__show-more {
+    color: #1d9bf0;
+    text-decoration: none;
+    font-size: 15px;
+    padding-top: 15px;
+    display: block;
+}

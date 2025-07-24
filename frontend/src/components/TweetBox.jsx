@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import './TweetBox.css'; 
-
-// Using a generic avatar for now
+import './TweetBox.css';
 import { CgProfile } from "react-icons/cg"; 
 
-function TweetBox() {
+// Accept the onPost function from props
+function TweetBox({ onPost }) { 
   const [tweetMessage, setTweetMessage] = useState('');
 
   const sendTweet = (e) => {
-    e.preventDefault(); // Prevent the form from refreshing the page
+    e.preventDefault();
     
-    // For now, we'll just log it. Later we'll send this to the backend.
-    console.log("Posting tweet:", tweetMessage); 
+    // If there's no text, do nothing
+    if (!tweetMessage.trim()) return;
+
+    // Call the function passed from the parent (Feed.jsx)
+    onPost(tweetMessage); 
 
     // Clear the input field after posting
     setTweetMessage('');

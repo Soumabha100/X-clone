@@ -11,8 +11,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    },
-    firstName: {
+      validate: {
+        validator: function(email) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        },
+        message: 'Please enter a valid email address'
+      }
+    },    firstName: {
       type: String,
       required: true,
     },
@@ -24,8 +29,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    },
-    profilePicture: {
+      minLength: [3, 'Username must be at least 3 characters long'],
+      maxLength: [30, 'Username cannot exceed 30 characters'],
+      validate: {
+        validator: function(username) {
+          return /^[a-zA-Z0-9_]+$/.test(username);
+        },
+        message: 'Username can only contain letters, numbers, and underscores'
+      }
+    },    profilePicture: {
       type: String,
       default: "",
     },
@@ -36,9 +48,8 @@ const userSchema = new mongoose.Schema(
     bio: {
       type: String,
       default: "",
-      maxLength: 160,
-    },
-    location: {
+      maxlength: 160,
+    },    location: {
       type: String,
       default: "",
     },

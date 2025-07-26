@@ -1,6 +1,6 @@
 import express from "express";
 import cors from 'cors';
-import clerkmiddleware from "@clerk/express";
+import { clerkMiddleware } from "@clerk/express";
 
 import userRoutes from './routes/user.route.js';
 import postRoutes from './routes/post.route.js';
@@ -14,7 +14,7 @@ const app = express();
 app.use(cors())
 app.use(express.json())
 
-app.use(clerkmiddleware());
+app.use(clerkMiddleware());
 
 
 app.get("/", (req, res) => res.send("Hello from the server!"))
@@ -23,7 +23,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 
 // error handling middleware
-console.error((err, req, res) => {
+console.error((err, req, res, next) => {
   console.error("Unhandled Error:", err);
   res.status(500).json({error: err.message || "Internal Server Error!"});
 });

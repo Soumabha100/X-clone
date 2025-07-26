@@ -2,7 +2,7 @@ import express from 'express';
 import {getUserProfile, syncUser, getCurrentUser,followUser, updateProfile} from "../controllers/user.controller.js";
 import {protectRoute} from "../middlewares/auth.middleware.js";
 
-const router = express.router();
+const router = express.Router();
 
 // public route
 router.get("/profile/:username", getUserProfile);

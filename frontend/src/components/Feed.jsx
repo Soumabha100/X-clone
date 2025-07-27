@@ -1,9 +1,10 @@
 import React from 'react'
+import Post from './Post'
 
 const Feed = () => {
   return (
-    <div>
-      Feed
+    <div className='w-[60%]'>
+      <Post/>
     </div>
   )
 }

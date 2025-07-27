@@ -8,7 +8,7 @@ import { FaHeart } from "react-icons/fa";
 
 const Sidebar = () => {
   return (
-    <div>
+    <div className='w-[20%]'>
       <div className='ml-5'>
         <FaXTwitter size={28}/>
       </div>

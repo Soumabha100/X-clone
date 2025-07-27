@@ -1,9 +1,12 @@
-import React from 'react'
+import React from 'react';
+import Home from './components/Home.jsx';
+import Feed from './components/Feed.jsx';
+import Widgets from './components/Widgets.jsx';
 
 const App = () => {
   return (
     <div>
-      <h1>Welcome to Twitter</h1>
+      <Home/>
     </div>
   )
 }

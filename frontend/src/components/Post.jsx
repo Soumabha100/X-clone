@@ -7,10 +7,10 @@ const Post = () => {
         <div className='flex items-center justify-between border border-neutral-800'>
 
         <div className=' cursor-pointer'>
-           <h1 className='font-bold text-lg'>For You</h1>
+           <h1 className='font-bold text-lg'>For study</h1>
         </div>
         <div className=' cursor-pointer'>
-           <h1 className='font-bold text-lg'>Following</h1>
+           <h1 className='font-bold text-lg'>Following me</h1>
         </div>
 
       </div>

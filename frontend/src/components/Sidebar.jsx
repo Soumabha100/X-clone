@@ -1,6 +1,5 @@
 import React from 'react'
 import { FaXTwitter } from "react-icons/fa6";
-import { CiHome } from "react-icons/ci";
 import { GoHomeFill } from "react-icons/go";
 import { FaSearch } from "react-icons/fa";
 import { IoMdNotifications } from "react-icons/io";

@@ -2,8 +2,9 @@ import React from 'react'
 
 const Widgets = () => {
   return (
-    <div>
+    <div >
       Widgets
+      tamalika
     </div>
   )
 }

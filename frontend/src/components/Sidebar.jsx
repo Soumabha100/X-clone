@@ -9,27 +9,27 @@ import { FaHeart } from "react-icons/fa";
 const Sidebar = () => {
   return (
     <div className='w-[20%]'>
-      <div className='ml-5'>
-        <FaXTwitter size={28}/>
+      <div className='ml-5 mt-3'>
+        <FaXTwitter size={32}/>
       </div>
       <div>
-        <div className='flex items-center space-x-4 p-3 my-1 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
+        <div className='flex items-center space-x-4 p-3 my-3 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
                 <GoHomeFill size="28px"/>
             <h1 className='font-bold text-lg'>Home</h1>
         </div>
-        <div className='flex items-center space-x-4 p-3 my-1 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
+        <div className='flex items-center space-x-4 p-3 my-3 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
                 <FaSearch size="28px"/>
             <h1 className='font-bold text-lg'>Explore</h1>
         </div>
-        <div className='flex items-center space-x-4 p-3 my-1 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
+        <div className='flex items-center space-x-4 p-3 my-3 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
                 <IoMdNotifications size="28px"/>
             <h1 className='font-bold text-lg'>Notifications</h1>
         </div>
-        <div className='flex items-center space-x-4 p-3 my-1 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
+        <div className='flex items-center space-x-4 p-3 my-3 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
                 <FaUser size="28px"/>
             <h1 className='font-bold text-lg'>Profile</h1>
         </div>
-        <div className='flex items-center space-x-4 p-3 my-1 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
+        <div className='flex items-center space-x-4 p-3 my-3 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full'>
                 <FaHeart size="28px"/>
             <h1 className='font-bold text-lg'>Premium</h1>
         </div>

@@ -1,19 +1,10 @@
-import './App.css';
-import React from 'react';
-import Sidebar from './components/Sidebar.jsx';
-import Feed from './components/Feed.jsx';
-import Widgets from './components/Widgets.jsx';
+import React from 'react'
 
-function App() {
-
+const App = () => {
   return (
-    <>
-      <div className="app">
-        <Sidebar/>
-        <Feed/>
-        <Widgets/>
-      </div>
-    </>
+    <div>
+      <h1>Welcome to Twitter</h1>
+    </div>
   )
 }
 

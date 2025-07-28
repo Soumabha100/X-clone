@@ -8,7 +8,7 @@ import { FaHeart } from "react-icons/fa";
 
 const Sidebar = () => {
   return (
-    <div className='w-[20%]'>
+    <div className='w-[20%] sticky top-0 h-screen'>
       <div className='ml-5 mt-3'>
         <FaXTwitter size={32}/>
       </div>
@@ -33,8 +33,13 @@ const Sidebar = () => {
                 <FaHeart size="28px"/>
             <h1 className='font-bold text-lg'>Premium</h1>
         </div>
-        <button className='my-2 px-4 py-3 border-none  text-white font-bold bg-blue-600 w-full rounded-full cursor-pointer text-2xl transition-colors duration-200 hover:bg-blue-700'>Post</button>
+        <div className='flex items-center pl-6'>
+
+          <button className='my-2 px-4 py-3 border-none  text-white font-bold bg-blue-600 w-[110px] rounded-full cursor-pointer text-2xl transition-colors duration-200 hover:bg-blue-700'>Post</button>
       </div>
+
+        </div>
+        
     </div>
   ) 
 }

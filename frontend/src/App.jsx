@@ -4,10 +4,11 @@ import Feed from './components/Feed.jsx';
 import Widgets from './components/Widgets.jsx';
 import Body from './components/body.jsx';
 
-const App = () => {
+function App () {
   return (
-    <div className="App">
+    <div className='App'>
       <Body/>
+      <Home/>
     </div>
   )
 }

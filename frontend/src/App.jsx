@@ -3,9 +3,10 @@ import Home from './components/Home.jsx';
 import Feed from './components/Feed.jsx';
 import Widgets from './components/Widgets.jsx';
 
-const App = () => {
+function App () {
   return (
-    <div>
+    <div className='App'>
+      <Body/>
       <Home/>
     </div>
   )

@@ -22,7 +22,7 @@ const Widgets = () => {
                 />
     </div>
                 <div className='mt-3'>
-                  <h1 className='font-bold'> Soumabha Mjumder </h1>
+                  <h1 className='font-bold'>Soumabha Mojumder</h1>
                   <p className='text-sm'>@soumabha04</p>
                  
              </div>               

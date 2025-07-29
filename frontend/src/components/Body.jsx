@@ -12,7 +12,7 @@ const Body = () => {
       element: <Home />,
       children: [
         {
-          path: "/",
+         index:true,
           element: <Feed />,
         },
         { path: "/profile",

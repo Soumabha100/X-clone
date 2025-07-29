@@ -1,24 +1,37 @@
-import React from 'react'
-import {createBrowserRouter,  RouterProvider} from "react-router-dom"
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Home from "./Home";
+import Feed from "./Feed";
+import Profile from "./Profile";
+import Notifications from "./Notifications";
+
 const Body = () => {
-    const appRouter = createBrowserRouter([
-
+  const appRouter = createBrowserRouter([
+    {
+      path: "/",
+      element: <Home />,
+      children: [
         {
-            path: "/home",
-            element:<Home/>
+          path: "/",
+          element: <Feed />,
         },
-{
-    path:"/login",
-    element:<Login/>
-}
-    ])
-
-
+        { path: "/profile",
+            element:<Profile/>
+         },
+         { path: "/notifications",
+            element:<Notifications/>
+         },
+      ],
+    },
+  ]);
   return (
     <div>
-        <RouterProvider router={appRouter}/>
+      <div>
+        {" "}
+        <RouterProvider router={appRouter} />
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Body
+export default Body;

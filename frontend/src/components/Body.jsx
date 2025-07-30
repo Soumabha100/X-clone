@@ -4,6 +4,8 @@ import Home from "./Home";
 import Feed from "./Feed";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
+import Explore from "./Explore";
+import Premium from "./Premium";
 
 const Body = () => {
   const appRouter = createBrowserRouter([
@@ -20,6 +22,12 @@ const Body = () => {
          },
          { path: "/notifications",
             element:<Notifications/>
+         },
+         { path: "/explore",
+            element:<Explore/>
+         },
+         { path: "/premium",
+            element:<Premium/>
          },
       ],
     },

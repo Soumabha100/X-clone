@@ -28,6 +28,45 @@ const Notifications = () => {
         </div>
         
       </div>
+
+      <div>
+        <div className="flex px-4 py-4 border border-neutral-700">
+          <Avatar
+            src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
+            size="40"
+            round={true}
+          />
+          <div className="px-3  w-full">
+            <div className="flex items-center justify-between">
+              <h1 className="font-bold size ">Elon Musk</h1>
+              <p className="text-neutral-500"> 2h</p>
+            </div>
+
+            <div className="py-2">
+              <p className=" font-semibold text-neutral-500">Hello, if you see this message then the notifications are working 🤗</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="flex px-4 py-4 border border-neutral-700">
+          <Avatar
+            src="https://pbs.twimg.com/profile_images/1683899100922511378/5lY42eHs_400x400.jpg"
+            size="40"
+            round={true}
+          />
+          <div className="px-3  w-full">
+            <div className="flex items-center justify-between">
+              <h1 className="font-bold size ">X Premium</h1>
+              <p className="text-neutral-500"> 9h</p>
+            </div>
+
+            <div className="py-2">
+              <p className=" font-semibold text-neutral-500">Hello, try our new premium features! 🤗</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

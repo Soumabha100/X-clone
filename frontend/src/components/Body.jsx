@@ -26,11 +26,11 @@ const Body = () => {
          { path: "/explore",
             element:<Explore/>
          },
+      ],
+    },
          { path: "/premium",
             element:<Premium/>
          },
-      ],
-    },
   ]);
   return (
     <div>

@@ -8,7 +8,7 @@ const Notifications = () => {
       <div>
         <div className="flex items-center justify-between border border-neutral-700">
           <div className=" cursor-pointer  text-center px-4 py-3">
-            <h1 className="font-bold text-lg">Following</h1>
+            <h1 className="font-bold text-xl">Notifications</h1>
           </div>
           <div className=" cursor-pointer  text-center px-4 py-3">
             <IoIosSettings />
@@ -20,10 +20,10 @@ const Notifications = () => {
             <h1 className="font-bold text-lg">All</h1>
           </div>
           <div className=" cursor-pointer  hover:bg-neutral-800  transition-colors  duration-200 w-full text-center px-4 py-3">
-            Verified
+            <h1 className="font-bold text-lg">Verified</h1>
           </div>
           <div className=" cursor-pointer  hover:bg-neutral-800  transition-colors  duration-200 w-full text-center px-4 py-3">
-            Mentions
+            <h1 className="font-bold text-lg">Mentions</h1>
           </div>
         </div>
         

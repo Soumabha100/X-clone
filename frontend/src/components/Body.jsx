@@ -29,6 +29,7 @@ const Body = () => {
          { path: "/premium",
             element:<Premium/>
          },
+         
       ],
     },
   ]);

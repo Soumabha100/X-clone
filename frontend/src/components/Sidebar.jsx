@@ -45,7 +45,7 @@ const Sidebar = () => {
           <h1 className="font-bold text-lg">Profile</h1>
         </Link>
         <Link
-          to="/"
+          to="/premium"
           className="flex items-center space-x-4 p-3 my-3 cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 rounded-full"
         >
           <FaHeart size="28px" />

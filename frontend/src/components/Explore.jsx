@@ -12,15 +12,18 @@ const Explore = () => {
           <div className='font-extrabold flex gap-12 text-neutral-700' >
           <div className=' hover:text-white'>
             <h1>For You</h1>
-            <p>Today's News </p>
+           
           </div>
           <div className=' hover:text-white'>
 <h1>
   Trending
 </h1>
+<div>
+  <p>Today's News</p>
+</div>
           </div>
           <div className=' hover:text-white'>
-            News
+          
           </div>
           <div className=' hover:text-white'>
             Sports

@@ -1,26 +1,25 @@
 {
-  "name": "backend",
+  "name": "twitter",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
-  "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
-  },
-  "keywords": [],
   "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "@arcjet/inspect": "^1.0.0-beta.9",
-    "@arcjet/node": "^1.0.0-beta.9",
-    "@clerk/express": "^1.7.10",
-    "cloudinary": "^2.0.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.0",
-    "express": "^5.1.0",
-    "express-async-handler": "^1.2.0",
-    "mongoose": "^8.16.4",
-    "multer": "^2.0.1"
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

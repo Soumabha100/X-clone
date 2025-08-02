@@ -7,49 +7,33 @@ import { RiCalendarScheduleFill } from "react-icons/ri";
 
 const Post = () => {
   return (
-    <div>
-      <div>
-        <div className="flex items-center justify-between border border-neutral-700">
-          <div className=" cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 w-full text-center px-4 py-3">
-            <h1 className="font-semibold text-lg">For you</h1>
-          </div>
-          <div className=" cursor-pointer hover:bg-neutral-800  transition-colors  duration-200 w-full text-center px-4 py-3">
-            <h1 className="font-semibold text-lg">Following</h1>
-          </div>
+    // The component now only contains the post creation area.
+    <div className="w-full px-4 pt-4 border-b border-neutral-700">
+      <div className="flex items-center pb-4 ">
+        <div>
+          <Avatar
+            src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
+            size="40"
+            round={true}
+          />
         </div>
-        <div className="px-4 pt-4 w-full border border-neutral-700">
-          <div className="flex items-center border-b border-neutral-700 pb-4">
-            <div>
-              <Avatar
-                src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
-                size="40"
-                round={true}
-              />
-            </div>
-            <input
-              className="w-full outline-none border-none text-lg ml-4"
-              type="text"
-              placeholder="What's happening?"
-            />
-          </div>
-          <div className="flex items-center justify-between py-3">
-            <div className="flex items-center justify-between gap-3">
-              <FaImages className="text-blue-500 text-xl cursor-pointer hover:opacity-80 transition-opacity duration-200"/>
-
-              <HiMiniGif className="text-blue-500 text-xl cursor-pointer hover:opacity-80 transition-opacity duration-200"/>
-
-              <MdEmojiEmotions className="text-blue-500 text-xl cursor-pointer hover:opacity-80 transition-opacity duration-200"/>
-
-              <RiCalendarScheduleFill className="text-blue-500 text-xl cursor-pointer hover:opacity-80 transition-opacity duration-200"/>
-            </div>
-
-            <button className="my-2 px-4 py-3 border-none  text-white font-bold bg-blue-600 rounded-full w-[90px] cursor-pointer text-lg transition-colors duration-200 hover:bg-blue-700">
-              Post
-            </button>
-          </div>
-        </div>
+        <input
+          className="w-full ml-4 text-lg bg-transparent border-none outline-none"
+          type="text"
+          placeholder="What's happening?"
+        />
       </div>
-      <div></div>
+      <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between gap-4">
+          <FaImages className="text-xl text-blue-500 duration-200 cursor-pointer hover:opacity-80 transition-opacity" />
+          <HiMiniGif className="text-xl text-blue-500 duration-200 cursor-pointer hover:opacity-80 transition-opacity" />
+          <MdEmojiEmotions className="text-xl text-blue-500 duration-200 cursor-pointer hover:opacity-80 transition-opacity" />
+          <RiCalendarScheduleFill className="text-xl text-blue-500 duration-200 cursor-pointer hover:opacity-80 transition-opacity" />
+        </div>
+        <button className="px-6 py-2 my-2 text-md font-bold text-white bg-blue-500 border-none rounded-full cursor-pointer transition-colors duration-200 hover:bg-blue-600">
+          Post
+        </button>
+      </div>
     </div>
   );
 };

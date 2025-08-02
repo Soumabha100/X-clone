@@ -8,7 +8,7 @@ import { RiCalendarScheduleFill } from "react-icons/ri";
 const Post = () => {
   return (
     // The component now only contains the post creation area.
-    <div className="w-full px-4 pt-4 border-b border-neutral-800">
+    <div className="w-full px-4 pt-4 border-b border-neutral-700">
       <div className="flex items-center pb-4 ">
         <div>
           <Avatar

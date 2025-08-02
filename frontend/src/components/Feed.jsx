@@ -48,10 +48,10 @@ const Feed = () => {
   const [activeTab, setActiveTab] = useState("For you");
 
   return (
-    <div className="w-full border-l border-r lg:w-[60%] border-neutral-800">
+    <div className="w-full border-l border-r lg:w-[60%] border-neutral-700">
       {/* --- Sticky Header with Tabs --- */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
-        <div className="flex items-center justify-between border-b border-neutral-800">
+        <div className="flex items-center justify-between border-b border-neutral-700">
           {/* "For you" Tab */}
           <div
             onClick={() => setActiveTab("For you")}

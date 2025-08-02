@@ -9,7 +9,7 @@ const Tweet = ({ tweet }) => {
   const { author, content, image, timestamp, stats } = tweet;
 
   return (
-    <div className="flex px-4 py-4 border-b border-neutral-800">
+    <div className="flex px-4 py-4 border-b border-neutral-700">
       <Avatar src={author.avatar} size="40" round={true} />
       <div className="w-full px-3">
         {/* Tweet Header */}

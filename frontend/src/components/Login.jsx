@@ -3,16 +3,16 @@ import { FaXTwitter } from "react-icons/fa6";
 
 const Login = () => {
   return (
-    <div className="bg-black text-white w-screen h-screen flex items-center justify-center overflow-hidden">
-      <div className="flex items-center justify-evenly w-[80%]">
+    <div className="w-full min-h-screen flex justify-center py-12 overflow-x-hidden">
+      <div className="flex flex-col lg:flex-row items-center justify-evenly w-[90%] lg:w-[80%] max-w-6xl">
         
         {/* Left Side: Logo */}
-        <div>
+        <div className="mb-12 lg:mb-0">
           <FaXTwitter size={300} />
         </div>
 
         {/* Right Side: Entire form column */}
-        <div className="w-[45%]">
+        <div className="w-full lg:w-1/2 max-w-md">
           {/* Headings */}
           <h1 className="font-bold text-6xl mb-4">Happening now</h1>
           <h2 className="font-bold text-3xl mb-8">Join today.</h2>

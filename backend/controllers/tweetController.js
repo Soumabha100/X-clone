@@ -1,6 +1,7 @@
 import { Tweet } from "../models/tweetSchema.js";
 import { User } from "../models/userSchema.js";
 
+
 export const createTweet = async (req, res) => {
     try {
         const { description, id } = req.body;
@@ -10,15 +11,15 @@ export const createTweet = async (req, res) => {
                 success: false
             });
         };
-        const user = await User.findById(id).select("-password");
-        await Tweet.create({
+        // We don't need to find the user here anymore, the frontend has the info.
+        const newTweet = await Tweet.create({
             description,
-            userId:id,
-            userDetails:user
+            userId: id,
         });
         return res.status(201).json({
-            message:"Tweet created successfully.",
-            success:true,
+            message: "Tweet created successfully.",
+            success: true,
+            tweet: newTweet // Add the new tweet to the response
         })
     } catch (error) {
         console.log(error);

@@ -12,36 +12,43 @@ const Body = () => {
   const appRouter = createBrowserRouter([
     {
       path: "/",
+      element: <Login />,
+    },
+    {
+      path: "/home",
       element: <Home />,
       children: [
         {
-         index:true,
+          index: true,
           element: <Feed />,
         },
-        { path: "/profile",
-            element:<Profile/>
-         },
-         { path: "/notifications",
-            element:<Notifications/>
-         },
-         { path: "/explore",
-            element:<Explore/>
-         },
+        {
+          path: "profile/:id", 
+          element: <Profile />,
+        },
+        {
+          path: "notifications",
+          element: <Notifications />,
+        },
+        {
+          path: "explore",
+          element: <Explore />,
+        },
       ],
     },
-         { path: "/premium",
-            element:<Premium/>
-         },
-         { path: "/login",
-            element:<Login/>
-         },
+    {
+      path: "/login",
+      element: <Login />,
+    },
+    {
+      path: "/premium",
+      element: <Premium />,
+    },
   ]);
+
   return (
     <div>
-      <div>
-        {" "}
-        <RouterProvider router={appRouter} />
-      </div>
+      <RouterProvider router={appRouter} />
     </div>
   );
 };

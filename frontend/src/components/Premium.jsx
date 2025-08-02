@@ -13,7 +13,7 @@ const Premium = () => {
   return (
     <div className="flex flex-col items-center justify-center p-4 relative bg-blue-950 ">
       <Link
-        to="/"
+        to="/home"
         className="top-6 left-6 absolute hover:text-neutral-500 transition-colors duration-200"
       >
         <MdCancel size="32px" />

@@ -2,6 +2,23 @@ import { User } from "../models/userSchema.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+export const getMe = async (req, res) => {
+    try {
+        // The user ID is available from the isAuthenticated middleware
+        const id = req.user; 
+        const user = await User.findById(id).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+        return res.status(200).json({
+            user,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
+
 export const Register = async (req, res) => {
     try {
         const { name, username, email, password } = req.body;

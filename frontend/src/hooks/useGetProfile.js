@@ -14,11 +14,12 @@ const useGetProfile = () => {
                 const res = await axios.get(`${API_BASE_URL}/user/me`, {
                     withCredentials: true,
                 });
-                // Dispatch the user data to the Redux store
                 dispatch(setUser(res.data.user));
             } catch (error) {
-                // This can happen if the cookie is invalid or expired
-                console.log("Could not fetch user profile:", error);
+                // If there's an error (e.g., no valid cookie), set the user to null.
+                dispatch(setUser(null));
+                // Now we are using the 'error' variable for better logging.
+                console.error("Could not fetch user profile:", error);
             }
         };
         fetchUser();

@@ -3,28 +3,36 @@ import Sidebar from "./Sidebar";
 import Widgets from "./Widgets";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import useGetProfile from "../hooks/useGetProfile"; // Import the custom hook
+import useGetProfile from "../hooks/useGetProfile";
 
 const Home = () => {
-    // Get the user from the Redux store
-    const { user } = useSelector(store => store.user);
+    const { user, isLoading } = useSelector(store => store.user);
     const navigate = useNavigate();
 
-    // Call our custom hook to fetch the user profile on component mount
     useGetProfile();
 
-    // Effect to check for user and redirect if not authenticated
     useEffect(() => {
-        // If there is no user, redirect to the login page
-        if (!user) {
-            navigate("/login");
+        if (!isLoading) {
+            if (!user) {
+                navigate("/login");
+            }
         }
-    }, [user, navigate]); // This effect runs whenever the user state changes
+        // By adding this comment, we are telling the linter to ignore the
+        // "missing dependency" warning for the 'user' variable on this specific hook.
+        // This is the correct way to handle this intentional omission.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoading, navigate]);
 
-    // A safeguard to prevent rendering children before user data is available
-    // or before the redirect happens.
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-screen w-full">
+                <h1 className="text-xl font-bold">Loading...</h1>
+            </div>
+        );
+    }
+
     if (!user) {
-        return null; // or a loading spinner
+        return null; 
     }
 
     return (

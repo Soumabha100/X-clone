@@ -1,167 +1,136 @@
-import React, { useState, useEffect } from "react";
-import { FaXTwitter } from "react-icons/fa6";
-import { GoHomeFill } from "react-icons/go";
-import { FaSearch } from "react-icons/fa";
-import { IoMdNotifications } from "react-icons/io";
-import { FaUser } from "react-icons/fa";
-import { FaHeart } from "react-icons/fa";
-import { RiLogoutBoxRLine } from "react-icons/ri";
-import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import toast from "react-hot-toast";
+import React, { useEffect, useCallback } from "react";
+import {
+  IoIosSettings,
+  IoMdHeart,
+  IoMdPerson,
+  IoMdChatbubbles,
+} from "react-icons/io";
+import Avatar from "react-avatar";
 import { useSelector, useDispatch } from "react-redux";
-import { clearUser } from "../redux/userSlice";
-import { setLoading } from "../redux/uiSlice";
-import LogoutModal from "./LogoutModal";
-import { setUnreadCount } from "../redux/notificationSlice";
+import axios from "axios";
+import { setNotifications } from "../redux/notificationSlice";
+import { format } from "timeago.js";
+import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
-/**
- * The Sidebar component provides the main navigation for the application.
- * It includes links to different sections, a logout button with a confirmation modal,
- * and a dynamic badge for unread notifications.
- */
-const Sidebar = () => {
-  // Get the logged-in user and unread notification count from the Redux store.
-  const { user } = useSelector((store) => store.user);
-  const { unreadCount } = useSelector((store) => store.notification);
+// A helper component to render the correct icon based on the notification type.
+const NotificationIcon = ({ type }) => {
+  if (type === "like") return <IoMdHeart className="text-pink-600 text-2xl" />;
+  if (type === "follow")
+    return <IoMdPerson className="text-blue-500 text-2xl" />;
+  if (type === "comment")
+    return <IoMdChatbubbles className="text-green-500 text-2xl" />;
+  return null;
+};
 
-  const navigate = useNavigate();
+const Notifications = () => {
+  const { notifications } = useSelector((store) => store.notification);
   const dispatch = useDispatch();
 
-  // State to manage the visibility of the logout confirmation modal.
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-
-  // This effect runs on component mount and periodically fetches the unread
-  // notification count to keep the badge in the UI up-to-date.
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      // Only fetch if a user is logged in.
-      if (user) {
-        try {
-          const res = await axios.get(
-            `${API_BASE_URL}/notifications/unread-count`,
-            {
-              withCredentials: true,
-            }
-          );
-          // Dispatch the fetched count to the Redux store.
-          dispatch(setUnreadCount(res.data.count));
-        } catch (error) {
-          // We don't show a user-facing error here as it's a background task.
-          console.error("Failed to fetch unread notification count:", error);
-        }
-      }
-    };
-
-    fetchUnreadCount(); // Fetch immediately when the component loads.
-    const intervalId = setInterval(fetchUnreadCount, 30000); // And then check again every 30 seconds.
-
-    // Cleanup function to stop the interval when the component unmounts.
-    return () => clearInterval(intervalId);
-  }, [user, dispatch]);
-
-  /**
-   * Handles the complete logout process, including showing a loading state
-   * and redirecting the user.
-   */
-  const logoutHandler = async () => {
-    setIsLogoutModalOpen(false); // Close the confirmation modal.
-    dispatch(setLoading({ status: true, message: "Logging you out..." }));
+  // Fetches all notifications for the logged-in user.
+  const fetchNotifications = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/user/logout`, {
+      const res = await axios.get(`${API_BASE_URL}/notifications`, {
         withCredentials: true,
       });
-      dispatch(clearUser()); // Clear user data from the Redux store.
-      toast.success(res.data.message);
-      // Use a timeout to allow the user to see the success message before redirecting.
-      setTimeout(() => {
-        navigate("/login");
-        dispatch(setLoading({ status: false }));
-      }, 1500);
+      dispatch(setNotifications(res.data));
     } catch (error) {
-      toast.error(error.response?.data?.message || "Logout failed.");
-      dispatch(setLoading({ status: false }));
+      console.error("Failed to fetch notifications:", error);
+    }
+  }, [dispatch]);
+
+  // Clears all notifications for the logged-in user.
+  const clearAllNotifications = async () => {
+    try {
+      const res = await axios.delete(`${API_BASE_URL}/notifications/clear`, {
+        withCredentials: true,
+      });
+      toast.success(res.data.message);
+      dispatch(setNotifications([])); // Clear from state instantly.
+    } catch (error) {
+      toast.error("Failed to clear notifications.");
+      console.error("Failed to clear notifications:", error);
     }
   };
 
+  // Fetch notifications when the component first loads.
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
   return (
-    <>
-      <div className="w-[20%] sticky top-0 h-screen">
-        <div className="ml-5 mt-3">
-          <Link to="/home">
-            <FaXTwitter size={32} />
-          </Link>
-        </div>
-        <div className="mt-4">
-          {/* Navigation Links */}
-          <Link
-            to="/home"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <GoHomeFill size="28px" />
-            <h1 className="font-bold text-lg">Home</h1>
-          </Link>
-          <Link
-            to="/home/explore"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaSearch size="28px" />
-            <h1 className="font-bold text-lg">Explore</h1>
-          </Link>
-          <Link
-            to="/home/notifications"
-            className="relative flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            {/* The notification badge is only rendered if there are unread notifications. */}
-            {unreadCount > 0 && (
-              <span className="absolute top-2 left-5 w-5 h-5 bg-blue-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-black">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
+    // This is the main container for the notifications feed ONLY.
+    <div className="w-full lg:w-[60%] border-l border-r border-neutral-800">
+      <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-800">
+          <h1 className="font-bold text-xl">Notifications</h1>
+          <div className="flex items-center space-x-4">
+            {notifications && notifications.length > 0 && (
+              <button
+                onClick={clearAllNotifications}
+                className="text-sm text-blue-500 hover:underline"
+              >
+                Clear all
+              </button>
             )}
-            <IoMdNotifications size="28px" />
-            <h1 className="font-bold text-lg">Notifications</h1>
-          </Link>
-          {/* The profile link dynamically uses the logged-in user's ID. */}
-          <Link
-            to={`/home/profile/${user?._id}`}
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaUser size="28px" />
-            <h1 className="font-bold text-lg">Profile</h1>
-          </Link>
-          <Link
-            to="/premium"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaHeart size="28px" />
-            <h1 className="font-bold text-lg">Premium</h1>
-          </Link>
-          {/* This div opens the logout confirmation modal instead of logging out directly. */}
-          <div
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <RiLogoutBoxRLine size="28px" />
-            <h1 className="font-bold text-lg">Logout</h1>
-          </div>
-          <div className="mt-4">
-            <button className="w-full py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600">
-              Post
-            </button>
+            <IoIosSettings size="20px" className="cursor-pointer" />
           </div>
         </div>
       </div>
 
-      {/* The LogoutModal is only rendered when isLogoutModalOpen is true. */}
-      {isLogoutModalOpen && (
-        <LogoutModal
-          onConfirm={logoutHandler}
-          onCancel={() => setIsLogoutModalOpen(false)}
-        />
+      {/* Conditionally render a message if there are no notifications. */}
+      {notifications && notifications.length === 0 ? (
+        <div className="text-center p-8 mt-10">
+          <h2 className="font-bold text-3xl">No new notifications</h2>
+          <p className="text-neutral-500 mt-2">
+            When you get new notifications, they'll show up here.
+          </p>
+        </div>
+      ) : (
+        // Map over the notifications array to display each one.
+        <div>
+          {notifications &&
+            notifications.map((notif) => (
+              <Link
+                to={
+                  notif.tweetId
+                    ? `/home/tweet/${notif.tweetId}` // Link to the tweet if it's a like/comment
+                    : `/home/profile/${notif.fromUser._id}` // Link to the user's profile if it's a follow
+                }
+                key={notif._id}
+                className="block hover:bg-neutral-900/50 transition-colors duration-200"
+              >
+                <div className="flex p-4 border-b border-neutral-800">
+                  <div className="mr-4">
+                    <NotificationIcon type={notif.type} />
+                  </div>
+                  <div className="w-full">
+                    <div className="flex items-center mb-2">
+                      <Avatar
+                        name={notif.fromUser.name}
+                        size="40"
+                        round={true}
+                      />
+                    </div>
+                    <p className="text-white">
+                      <span className="font-bold">{notif.fromUser.name}</span>
+                      {notif.type === "like" && " liked your post."}
+                      {notif.type === "follow" && " started following you."}
+                      {notif.type === "comment" && " commented on your post."}
+                    </p>
+                    <p className="text-sm text-neutral-500 mt-1">
+                      {format(notif.createdAt)}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+        </div>
       )}
-    </>
+    </div>
   );
 };
-export default Sidebar;
+
+export default Notifications;

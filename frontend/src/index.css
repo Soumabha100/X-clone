@@ -1,28 +1,57 @@
+/* Import Tailwind CSS's base, components, and utility styles. */
 @import "tailwindcss";
 
+/* A common CSS reset to ensure consistent box model behavior across all elements. */
 * {
   box-sizing: border-box;
 }
 
+/* Define global styles for the entire application. */
 body {
   margin: 0;
-  font-family: Roboto;
+  font-family: Roboto, sans-serif; /* Sets the default font. */
 
+  /* Establishes the dark theme for the application. */
   background-color: #050505;
   color: #e7e9ea;
 }
 
+/* Define the keyframes for our custom 'pop-in' animation. */
+/* This is used for modals to give them a smooth entrance effect. */
 @keyframes pop-in {
+  /* The animation starts with the element slightly scaled down and invisible. */
   0% {
     opacity: 0;
     transform: scale(0.95);
   }
+  /* The animation ends with the element fully scaled and visible. */
   100% {
     opacity: 1;
     transform: scale(1);
   }
 }
 
+/* A utility class to apply the 'pop-in' animation to any element. */
 .animate-pop-in {
   animation: pop-in 0.2s ease-out forwards;
+}
+
+/* Define the keyframes for our fade-in animation. */
+/* This is used for the comments section to give it a smooth entrance. */
+@keyframes fade-in {
+  /* Starts invisible and slightly moved up. */
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  /* Ends fully visible and in its final position. */
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* A utility class to apply the 'fade-in' animation. */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }

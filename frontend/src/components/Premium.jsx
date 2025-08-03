@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { MdClose } from "react-icons/md";
 
-// A more modern checkmark icon
+// A reusable, modern checkmark icon component.
 const CheckIcon = () => (
   <svg
     className="w-6 h-6 text-blue-500"
@@ -20,9 +20,16 @@ const CheckIcon = () => (
   </svg>
 );
 
+/**
+ * The Premium component displays the subscription options for the application.
+ * It features a dynamic toggle for monthly and yearly billing.
+ */
 const Premium = () => {
+  // State to manage the currently selected billing cycle ('monthly' or 'yearly').
   const [billingCycle, setBillingCycle] = useState("monthly");
 
+  // An object that holds all the pricing and feature data for the different plans.
+  // This structure makes it easy to manage and render the plans dynamically.
   const plans = {
     monthly: [
       {
@@ -44,7 +51,7 @@ const Premium = () => {
           "Verified checkmark",
           "Creator Tools",
         ],
-        popular: true,
+        popular: true, // This flag is used to highlight the most popular plan.
       },
       {
         name: "Premium+",
@@ -92,6 +99,7 @@ const Premium = () => {
     ],
   };
 
+  // Select the correct set of plans based on the current billingCycle state.
   const currentPlans = plans[billingCycle];
 
   return (
@@ -114,7 +122,7 @@ const Premium = () => {
           </p>
         </div>
 
-        {/* --- Billing Cycle Toggle --- */}
+        {/* --- Billing Cycle Toggle Switch --- */}
         <div className="flex justify-center items-center space-x-4 mb-12">
           <span
             className={`font-semibold ${
@@ -126,7 +134,6 @@ const Premium = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              value=""
               className="sr-only peer"
               onChange={() =>
                 setBillingCycle(
@@ -134,7 +141,7 @@ const Premium = () => {
                 )
               }
             />
-            <div className="w-14 h-7 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            <div className="w-14 h-7 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
           </label>
           <div className="flex items-center">
             <span
@@ -150,7 +157,9 @@ const Premium = () => {
           </div>
         </div>
 
+        {/* --- Pricing Cards --- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Map over the selected plans array to render a card for each plan. */}
           {currentPlans.map((plan, index) => (
             <div
               key={index}
@@ -158,6 +167,7 @@ const Premium = () => {
                 plan.popular ? "border-blue-500" : "border-gray-700"
               } rounded-2xl p-8 flex flex-col text-left transform hover:scale-105 transition-transform duration-300`}
             >
+              {/* If a plan is marked as 'popular', display a special badge. */}
               {plan.popular && (
                 <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-sm font-bold px-4 py-1 rounded-full">
                   Most Popular
@@ -175,6 +185,7 @@ const Premium = () => {
                   /{billingCycle === "monthly" ? "Month" : "Year"}
                 </span>
               </div>
+              {/* The 'flex-grow' class ensures the feature list expands to push the button to the bottom. */}
               <ul className="space-y-4 mb-10 flex-grow">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-center">

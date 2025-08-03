@@ -1,35 +1,50 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
-    name:{
-        type:String,
-        required:true
+/**
+ * Defines the schema for a single user document in the database.
+ */
+const userSchema = new mongoose.Schema(
+  {
+    // The user's full name.
+    name: {
+      type: String,
+      required: true,
     },
-    username:{
-        type:String,
-        required:true,
-        unique:true
+    // The user's unique handle or screen name.
+    username: {
+      type: String,
+      required: true,
+      unique: true, // Ensures no two users can have the same username.
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true
+    // The user's unique email address, used for login and communication.
+    email: {
+      type: String,
+      required: true,
+      unique: true, // Ensures no two users can have the same email.
     },
-    password:{
-        type:String,
-        required:true
+    // The user's hashed password.
+    password: {
+      type: String,
+      required: true,
     },
-    followers:{
-        type:Array,
-        default:[]
+    // An array of user IDs who are following this user.
+    followers: {
+      type: Array,
+      default: [],
     },
-    following:{
-        type:Array,
-        default:[]
-    }, 
-    bookmarks:{
-        type:Array,
-        default:[]
-    }
-},{timestamps:true});
+    // An array of user IDs that this user is following.
+    following: {
+      type: Array,
+      default: [],
+    },
+    // An array of tweet IDs that the user has bookmarked.
+    bookmarks: {
+      type: Array,
+      default: [],
+    },
+  },
+  { timestamps: true }
+); // Automatically adds 'createdAt' and 'updatedAt' fields.
+
+// Create and export the User model based on the schema.
 export const User = mongoose.model("User", userSchema);

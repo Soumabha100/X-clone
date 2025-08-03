@@ -8,7 +8,7 @@ import { setUser } from "../redux/userSlice";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
-// Array of dynamic messages to display during loading
+// An array of engaging messages to display during the authentication process.
 const loadingMessages = [
   "Authenticating...",
   "Checking credentials...",
@@ -16,44 +16,62 @@ const loadingMessages = [
   "Almost there...",
 ];
 
+/**
+ * The Login component handles both user registration and sign-in.
+ * It features a toggleable form and a polished, full-screen loading animation
+ * to provide a smooth user experience during authentication.
+ */
 const Login = () => {
+  // State to toggle between the Login and Register form views.
   const [isLogin, setIsLogin] = useState(true);
+
+  // State for the various form input fields.
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [identifier, setIdentifier] = useState("");
+  const [identifier, setIdentifier] = useState(""); // Used for either email or username during login.
 
-  // This state controls the full-screen loading overlay
+  // State to control the visibility of the full-screen loading overlay.
   const [isLoading, setIsLoading] = useState(false);
+  // State to manage the currently displayed dynamic loading message.
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Effect to cycle through the loading messages
+  // This effect cycles through the 'loadingMessages' array when isLoading is true.
   useEffect(() => {
     let interval;
     if (isLoading) {
       let messageIndex = 0;
       interval = setInterval(() => {
+        // Loop through the messages array.
         messageIndex = (messageIndex + 1) % loadingMessages.length;
         setLoadingMessage(loadingMessages[messageIndex]);
-      }, 2000); // Change message every 2 seconds
+      }, 2000); // Change the message every 2 seconds.
     }
+    // Cleanup function to clear the interval when the component unmounts or isLoading becomes false.
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  /**
+   * Toggles the view between the login and registration forms.
+   */
   const toggleForm = () => {
     setIsLogin(!isLogin);
   };
 
+  /**
+   * Handles the form submission for both login and registration.
+   */
   const formSubmitHandler = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Activate the full-screen loading overlay
-    setLoadingMessage(loadingMessages[0]); // Reset to the first message
+    setIsLoading(true); // Activate the full-screen loading overlay.
+    setLoadingMessage(loadingMessages[0]); // Reset to the first message.
 
     if (isLogin) {
+      // --- LOGIN LOGIC ---
       try {
         const res = await axios.post(
           `${API_BASE_URL}/user/login`,
@@ -63,19 +81,21 @@ const Login = () => {
             withCredentials: true,
           }
         );
+        // On success, dispatch the user data to the Redux store.
         dispatch(setUser(res.data.user));
         toast.success(res.data.message);
-        // The overlay will remain visible until the new page loads.
-        // We do NOT turn off loading on success, which is the key to fixing the flash.
+        // We use a timeout to allow the user to see the success toast.
+        // The loading overlay remains active during this time to prevent any "flash"
+        // of the login screen before the redirect is complete.
         setTimeout(() => {
           navigate("/home");
         }, 1500);
       } catch (error) {
         toast.error(error.response?.data?.message || "An error occurred.");
-        setIsLoading(false); // Only turn off loading on error
+        setIsLoading(false); // Turn off the loading overlay only on error.
       }
     } else {
-      // Register logic
+      // --- REGISTER LOGIC ---
       try {
         const res = await axios.post(
           `${API_BASE_URL}/user/register`,
@@ -86,14 +106,15 @@ const Login = () => {
           }
         );
         toast.success(res.data.message);
-        setIsLogin(true);
+        setIsLogin(true); // Switch to the login form on successful registration.
       } catch (error) {
         toast.error(error.response?.data?.message || "An error occurred.");
       } finally {
+        // Always turn off the loading overlay after a registration attempt.
         setIsLoading(false);
       }
     }
-    // Clear form fields
+    // Clear all form fields after submission.
     setName("");
     setUsername("");
     setEmail("");
@@ -105,13 +126,14 @@ const Login = () => {
     <div className="relative flex items-center justify-center w-full min-h-screen py-12 bg-black text-white">
       <Toaster />
 
-      {/* --- Full-Screen Loading Overlay with Smooth Transition --- */}
+      {/* --- Full-Screen Loading Overlay --- */}
+      {/* This overlay provides a seamless transition during API calls. */}
       <div
         className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80 transition-opacity duration-300 ${
           isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* Spinning X Logo */}
+        {/* A spinning 'X' logo for a modern loading animation. */}
         <div className="animate-spin">
           <FaXTwitter size={60} />
         </div>
@@ -133,6 +155,7 @@ const Login = () => {
           </h2>
           <form className="flex flex-col" onSubmit={formSubmitHandler}>
             {isLogin ? (
+              // Login-specific input field.
               <>
                 <input
                   type="text"
@@ -144,6 +167,7 @@ const Login = () => {
                 />
               </>
             ) : (
+              // Registration-specific input fields.
               <>
                 <input
                   type="text"
@@ -171,6 +195,7 @@ const Login = () => {
                 />
               </>
             )}
+            {/* The password field is common to both forms. */}
             <input
               type="password"
               placeholder="Password"
@@ -189,6 +214,7 @@ const Login = () => {
               {isLogin ? "Sign in" : "Create Account"}
             </button>
           </form>
+          {/* Link to toggle between Login and Register views. */}
           <div className="mt-6 text-center">
             <p className="text-neutral-400">
               {isLogin

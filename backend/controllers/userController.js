@@ -1,13 +1,17 @@
 import { User } from "../models/userSchema.js";
-import { Notification } from "../models/notificationSchema.js"; // Import Notification model
+import { Notification } from "../models/notificationSchema.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+/**
+ * Fetches the profile of the currently authenticated user.
+ * Relies on the 'isAuthenticated' middleware to provide the user ID.
+ */
 export const getMe = async (req, res) => {
   try {
-    // The user ID is available from the isAuthenticated middleware
+    // The user ID is securely attached to the request object by our middleware.
     const id = req.user;
-    const user = await User.findById(id).select("-password");
+    const user = await User.findById(id).select("-password"); // Exclude the password for security.
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -20,16 +24,20 @@ export const getMe = async (req, res) => {
   }
 };
 
+/**
+ * Handles new user registration.
+ */
 export const Register = async (req, res) => {
   try {
     const { name, username, email, password } = req.body;
-    // basic validation
+    // Basic input validation.
     if (!name || !username || !email || !password) {
       return res.status(401).json({
         message: "All fields are required.",
         success: false,
       });
     }
+    // Check if a user with the given email already exists.
     const user = await User.findOne({ email });
     if (user) {
       return res.status(401).json({
@@ -37,6 +45,7 @@ export const Register = async (req, res) => {
         success: false,
       });
     }
+    // Hash the password before saving to the database.
     const hashedPassword = await bcryptjs.hash(password, 16);
 
     await User.create({
@@ -53,10 +62,13 @@ export const Register = async (req, res) => {
     console.log(error);
   }
 };
-// UPDATED Login function
+
+/**
+ * Handles user login with either an email or a username.
+ */
 export const Login = async (req, res) => {
   try {
-    const { identifier, password } = req.body; // Changed from 'email' to 'identifier'
+    const { identifier, password } = req.body;
     if (!identifier || !password) {
       return res.status(401).json({
         message: "All fields are required.",
@@ -64,7 +76,7 @@ export const Login = async (req, res) => {
       });
     }
 
-    // Find the user by either their email or their username
+    // Find the user by either their email or username for flexibility.
     const user = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
     });
@@ -76,6 +88,7 @@ export const Login = async (req, res) => {
       });
     }
 
+    // Compare the provided password with the hashed password in the database.
     const isMatch = await bcryptjs.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -84,6 +97,7 @@ export const Login = async (req, res) => {
       });
     }
 
+    // If credentials are correct, sign a new JWT.
     const tokenData = {
       userId: user._id,
     };
@@ -91,6 +105,7 @@ export const Login = async (req, res) => {
       expiresIn: "1d",
     });
 
+    // Send the token back as an httpOnly cookie for security.
     return res
       .status(201)
       .cookie("token", token, { expiresIn: "1d", httpOnly: true })
@@ -103,6 +118,10 @@ export const Login = async (req, res) => {
     console.log(error);
   }
 };
+
+/**
+ * Logs out the user by clearing their authentication cookie.
+ */
 export const logout = (req, res) => {
   return res.cookie("token", "", { expiresIn: new Date(Date.now()) }).json({
     message: "user logged out successfully.",
@@ -110,13 +129,16 @@ export const logout = (req, res) => {
   });
 };
 
+/**
+ * Toggles a bookmark on a tweet for the logged-in user.
+ */
 export const bookmark = async (req, res) => {
   try {
     const loggedInUserId = req.body.id;
     const tweetId = req.params.id;
     const user = await User.findById(loggedInUserId);
     if (user.bookmarks.includes(tweetId)) {
-      // remove
+      // If already bookmarked, remove it.
       await User.findByIdAndUpdate(loggedInUserId, {
         $pull: { bookmarks: tweetId },
       });
@@ -124,7 +146,7 @@ export const bookmark = async (req, res) => {
         message: "Removed from bookmarks.",
       });
     } else {
-      // bookmark
+      // If not bookmarked, add it.
       await User.findByIdAndUpdate(loggedInUserId, {
         $push: { bookmarks: tweetId },
       });
@@ -136,6 +158,10 @@ export const bookmark = async (req, res) => {
     console.log(error);
   }
 };
+
+/**
+ * Fetches the public profile of any user by their ID.
+ */
 export const getMyProfile = async (req, res) => {
   try {
     const id = req.params.id;
@@ -148,9 +174,14 @@ export const getMyProfile = async (req, res) => {
   }
 };
 
+/**
+ * Fetches a list of other users (excluding the logged-in user).
+ * Used for the "Who to Follow" section.
+ */
 export const getOtherUsers = async (req, res) => {
   try {
     const { id } = req.params;
+    // Find all users where the ID is "not equal" ($ne) to the logged-in user's ID.
     const otherUsers = await User.find({ _id: { $ne: id } }).select(
       "-password"
     );
@@ -167,13 +198,15 @@ export const getOtherUsers = async (req, res) => {
   }
 };
 
-// UPDATED follow function
+/**
+ * Allows the logged-in user to follow another user.
+ */
 export const follow = async (req, res) => {
   try {
     const loggedInUserId = req.body.id;
     const userId = req.params.id;
 
-    // Prevent following yourself
+    // Prevent a user from following themselves.
     if (loggedInUserId === userId) {
       return res.status(400).json({ message: "You cannot follow yourself." });
     }
@@ -182,10 +215,11 @@ export const follow = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user.followers.includes(loggedInUserId)) {
+      // Add the follower/following relationship.
       await user.updateOne({ $push: { followers: loggedInUserId } });
       await loggedInUser.updateOne({ $push: { following: userId } });
 
-      // Create notification ONLY if it's not a self-follow
+      // Create a notification for the user who was followed.
       await Notification.create({
         type: "follow",
         fromUser: loggedInUserId,
@@ -196,6 +230,7 @@ export const follow = async (req, res) => {
         message: `User already followed ${user.name}`,
       });
     }
+    // Return the updated profile of the logged-in user for instant UI updates.
     const updatedLoggedInUser = await User.findById(loggedInUserId).select(
       "-password"
     );
@@ -209,7 +244,9 @@ export const follow = async (req, res) => {
   }
 };
 
-// UPDATED unfollow function
+/**
+ * Allows the logged-in user to unfollow another user.
+ */
 export const unfollow = async (req, res) => {
   try {
     const loggedInUserId = req.body.id;
@@ -217,6 +254,7 @@ export const unfollow = async (req, res) => {
     const loggedInUser = await User.findById(loggedInUserId);
     const user = await User.findById(userId);
     if (loggedInUser.following.includes(userId)) {
+      // Remove the follower/following relationship.
       await user.updateOne({ $pull: { followers: loggedInUserId } });
       await loggedInUser.updateOne({ $pull: { following: userId } });
     } else {
@@ -224,7 +262,7 @@ export const unfollow = async (req, res) => {
         message: `User has not followed yet`,
       });
     }
-    // Return the updated user object for instant UI updates
+    // Return the updated profile of the logged-in user.
     const updatedLoggedInUser = await User.findById(loggedInUserId).select(
       "-password"
     );

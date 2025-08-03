@@ -7,27 +7,35 @@ import { setTweets } from "../redux/tweetSlice";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
+/**
+ * The Feed component is the main content area of the application.
+ * It displays the tweet creation component and the main tweet timeline.
+ */
 const Feed = () => {
+  // State to manage which tab ("For you" or "Following") is currently active.
   const [activeTab, setActiveTab] = useState("For you");
+  // Get the logged-in user and the current list of tweets from the Redux store.
   const { user } = useSelector((store) => store.user);
   const { tweets } = useSelector((store) => store.tweet);
   const dispatch = useDispatch();
 
-  // This effect now fetches tweets based on the active tab
+  // This effect is responsible for fetching the correct set of tweets from the backend.
   useEffect(() => {
     const fetchTweets = async () => {
-      if (!user?._id) return; // Don't fetch if there's no user
+      // Guard clause: Don't attempt to fetch if there is no logged-in user.
+      if (!user?._id) return;
 
       try {
         let res;
         if (activeTab === "For you") {
-          // Call the new public endpoint for the "For you" tab
+          // If the "For you" tab is active, fetch all public tweets from everyone.
           res = await axios.get(`${API_BASE_URL}/tweet/public`, {
             withCredentials: true,
           });
+          // Dispatch the fetched tweets to the Redux store.
           dispatch(setTweets(res.data));
         } else {
-          // Call the personalized endpoint for the "Following" tab
+          // If the "Following" tab is active, fetch the personalized feed for the user.
           res = await axios.get(`${API_BASE_URL}/tweet/alltweets/${user._id}`, {
             withCredentials: true,
           });
@@ -35,19 +43,21 @@ const Feed = () => {
         }
       } catch (error) {
         console.error("Failed to fetch tweets:", error);
-        dispatch(setTweets([])); // Clear tweets on error
+        // In case of an error, clear the feed to avoid showing stale data.
+        dispatch(setTweets([]));
       }
     };
 
     fetchTweets();
-    // Re-run the effect when the user or the active tab changes
+    // This effect will re-run whenever the logged-in user, active tab, or dispatch function changes.
   }, [user, activeTab, dispatch]);
 
   return (
     <div className="w-full border-l border-r lg:w-[60%] border-neutral-700">
-      {/* --- Sticky Header with Tabs --- */}
+      {/* --- Sticky Header with Navigation Tabs --- */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
         <div className="flex items-center justify-between border-b border-neutral-700">
+          {/* "For you" Tab */}
           <div
             onClick={() => setActiveTab("For you")}
             className="w-full text-center cursor-pointer hover:bg-neutral-900"
@@ -63,6 +73,7 @@ const Feed = () => {
               )}
             </h1>
           </div>
+          {/* "Following" Tab */}
           <div
             onClick={() => setActiveTab("Following")}
             className="w-full text-center cursor-pointer hover:bg-neutral-900"
@@ -81,8 +92,10 @@ const Feed = () => {
         </div>
       </div>
 
+      {/* Renders the component for creating a new tweet. */}
       <Post />
 
+      {/* Map over the 'tweets' array from the Redux store and render a Tweet component for each one. */}
       {tweets?.map((tweet) => (
         <Tweet key={tweet._id} tweet={tweet} />
       ))}

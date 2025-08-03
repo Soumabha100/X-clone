@@ -1,17 +1,22 @@
 import React, { useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import { IoIosSettings } from "react-icons/io";
-import { FiMoreHorizontal } from "react-icons/fi"; // A new icon for the trend options
+import { FiMoreHorizontal } from "react-icons/fi";
 
-// Main Explore Component
+/**
+ * The Explore component serves as the discovery page of the application,
+ * showcasing trending topics and news.
+ * Note: This component currently uses static mock data for demonstration.
+ */
 const Explore = () => {
-  // State to keep track of the currently active tab
+  // State to manage which navigation tab is currently active (e.g., "For You", "Trending").
   const [activeTab, setActiveTab] = useState("For You");
 
-  // Navigation tabs array
+  // An array of strings representing the navigation tabs.
   const tabs = ["For You", "Trending", "News", "Sports", "Entertainment"];
 
-  // Mock data for trends to make the page look complete
+  // Mock data array to simulate a list of trending topics.
+  // In a real application, this data would be fetched from a backend API.
   const trends = [
     {
       category: "Trending in India",
@@ -42,9 +47,10 @@ const Explore = () => {
   ];
 
   return (
-    // Main container for the explore section.
+    // Main container for the Explore page.
     <div className="w-full min-h-screen text-white border-l border-r border-neutral-800">
-      {/* --- Sticky Header: Search Bar and Settings --- */}
+      {/* --- Sticky Header Section --- */}
+      {/* This header contains the search bar and settings icon and stays at the top on scroll. */}
       <div className="sticky top-0 z-10 px-4 py-2 bg-black/80 backdrop-blur-md">
         <div className="flex items-center justify-between gap-4">
           {/* Search Bar */}
@@ -63,7 +69,7 @@ const Explore = () => {
         </div>
       </div>
 
-      {/* --- Navigation Tabs --- */}
+      {/* --- Navigation Tabs Section --- */}
       <nav className="flex justify-around border-b border-neutral-800">
         {tabs.map((tab) => (
           <div
@@ -77,7 +83,7 @@ const Explore = () => {
               }`}
             >
               {tab}
-              {/* Active tab indicator */}
+              {/* This div renders a blue underline for the currently active tab. */}
               {activeTab === tab && (
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500 rounded-full"></div>
               )}
@@ -86,13 +92,13 @@ const Explore = () => {
         ))}
       </nav>
 
-      {/* --- Content Section: Trends for you --- */}
+      {/* --- Content Section --- */}
       <div>
         <div className="p-4 border-b border-neutral-800">
           <h1 className="text-xl font-extrabold">Trends for you</h1>
         </div>
 
-        {/* List of trends */}
+        {/* Map over the mock 'trends' data to render each trending topic. */}
         {trends.map((trend, index) => (
           <div
             key={index}

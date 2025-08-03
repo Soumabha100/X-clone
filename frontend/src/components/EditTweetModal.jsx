@@ -8,12 +8,23 @@ import { updateTweet } from "../redux/tweetSlice";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
+/**
+ * A modal component for editing the description of an existing tweet.
+ * @param {object} props - The component's props.
+ * @param {object} props.tweet - The full tweet object to be edited.
+ * @param {function} props.onClose - A function to close the modal.
+ */
 const EditTweetModal = ({ tweet, onClose }) => {
+  // State to hold the edited text. It's initialized with the tweet's current description.
   const [editedDescription, setEditedDescription] = useState(tweet.description);
   const dispatch = useDispatch();
 
+  /**
+   * Handles the submission of the edited tweet to the backend.
+   */
   const submitHandler = async () => {
     try {
+      // Send a PUT request to the backend's edit endpoint.
       const res = await axios.put(
         `${API_BASE_URL}/tweet/edit/${tweet._id}`,
         {
@@ -24,9 +35,11 @@ const EditTweetModal = ({ tweet, onClose }) => {
         }
       );
 
+      // Dispatch an action to update the tweet in the global Redux store.
+      // This ensures the UI updates instantly without a page refresh.
       dispatch(updateTweet(res.data.tweet));
       toast.success(res.data.message);
-      onClose(); // Close the modal on success
+      onClose(); // Close the modal after a successful update.
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update tweet.");
       console.error(error);
@@ -34,6 +47,7 @@ const EditTweetModal = ({ tweet, onClose }) => {
   };
 
   return (
+    // The main container for the modal, including a semi-transparent backdrop.
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-16 z-50">
       <div className="bg-black w-full max-w-lg rounded-2xl p-4 border border-gray-700">
         <div className="flex items-center justify-between mb-4">

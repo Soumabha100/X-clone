@@ -1,83 +1,89 @@
-import React from 'react'
+import React, { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
-import Avatar from 'react-avatar';
+import Avatar from "react-avatar";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
+const API_BASE_URL = "http://localhost:8000/api/v1";
+
+/**
+ * The Widgets component displays the right-hand column of the application,
+ * including a search bar and a "Who to Follow" section.
+ */
 const Widgets = () => {
+  // State to hold the list of users to suggest for following.
+  const [otherUsers, setOtherUsers] = useState([]);
+  // Get the currently logged-in user's data from the Redux store.
+  const { user: loggedInUser } = useSelector((store) => store.user);
+
+  // This effect fetches the list of other users from the backend when the component mounts.
+  useEffect(() => {
+    const fetchOtherUsers = async () => {
+      // Only fetch if a user is logged in.
+      if (loggedInUser?._id) {
+        try {
+          const res = await axios.get(
+            `${API_BASE_URL}/user/otheruser/${loggedInUser._id}`,
+            {
+              withCredentials: true,
+            }
+          );
+          // Store the fetched users in the component's state.
+          setOtherUsers(res.data.otherUsers);
+        } catch (error) {
+          console.error("Failed to fetch other users:", error);
+        }
+      }
+    };
+    fetchOtherUsers();
+  }, [loggedInUser]); // Re-run the effect if the logged-in user changes.
+
   return (
-    <div className='w[20%] pt-1'>
-    <div className='ml-10 flex items-center  p-2 bg-neutral-600 rounded-full outline-none w-full '>
-      <FaSearch size={"20px"}/>
-<input type="text" className='bg bg-transparent outline-none px-2 '  placeholder="search" />
-      
-    </div>
-    <div className='p-4 ml-10  bg-neutral-600 rounded-3xl my-4 w-full' >
-      <h1 className='text-lg font-extrabold'>Who to Follow</h1>
-<div className='flex items-center justify-between'> 
-  <div className='flex'>
-    <div className='mt-3'>
-           <Avatar  className='mr-2'
-                src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
-                size="40"
-                round={true}
-                />
-    </div>
-                <div className='mt-3'>
-                  <h1 className='font-bold'>Soumabha Majumder</h1>
-                  <p className='text-sm'>@soumabha04</p>
-                 
-             </div>               
-  </div>
-  <div>
-  <button className=' px-5 py-1.5 bg-black text-white rounded-full font-extrabold '>profile</button>
-  </div>
-</div>
-<div className='flex items-center justify-between'> 
-  <div className='flex'>
-    <div className='mt-3'>
-           <Avatar  className='mr-2'
-                src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
-                size="40"
-                round={true}
-                />
-    </div>
-                <div className='mt-3'>
-                  <h1 className='font-bold'> Tamalika Das </h1>
-                  <p className='text-sm'>@tama32</p>                
-                </div>            
-                
-  </div>
-  <div>
-  <button className=' px-5 py-1.5 bg-black text-white rounded-full font-extrabold '>profile</button>
-  </div>
-
-</div>
-<div className='flex items-center justify-between'> 
-  <div className='flex'>
-    <div className='mt-3'>
-           <Avatar  className='mr-2'
-                src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
-                size="40"
-                round={true}
-                />
-    </div>
-                <div className='mt-3'>
-                  <h1 className='font-bold'> Suman Bera </h1>
-                  <p className='text-sm'>@sumon03</p>
-                 
-             </div>               
-  </div>
-  <div>
-  <button className=' px-5 py-1.5 bg-black text-white rounded-full font-extrabold '>profile</button>
-  </div>
-</div>
-
+    // Main container for the widgets column.
+    <div className="w-[25%] pt-1 pl-4">
+      {/* --- Search Bar --- */}
+      <div className="flex items-center p-2 bg-neutral-800 rounded-full outline-none w-full">
+        <FaSearch size={"20px"} className="text-neutral-500 ml-2" />
+        <input
+          type="text"
+          className="bg-transparent outline-none px-2 w-full"
+          placeholder="Search"
+        />
       </div>
-      
-      <div>
 
+      {/* --- "Who to Follow" Section --- */}
+      <div className="p-4 mt-4 bg-neutral-800 rounded-2xl w-full">
+        <h1 className="text-xl font-bold">Who to Follow</h1>
+
+        {/* Map over the 'otherUsers' array to dynamically render each user suggestion. */}
+        {otherUsers.map((user) => (
+          <div
+            key={user._id}
+            className="flex items-center justify-between mt-4"
+          >
+            <div className="flex items-center">
+              <div className="mr-2">
+                <Avatar name={user.name} size="40" round={true} />
+              </div>
+              <div>
+                <h1 className="font-bold text-sm">{user.name}</h1>
+                <p className="text-sm text-neutral-500">@{user.username}</p>
+              </div>
+            </div>
+            <div>
+              {/* The button is now a Link that navigates to the user's profile page. */}
+              <Link to={`/home/profile/${user._id}`}>
+                <button className="px-4 py-1.5 bg-white text-black rounded-full font-bold text-sm hover:bg-gray-200 transition-colors">
+                  Profile
+                </button>
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Widgets
+export default Widgets;

@@ -147,34 +147,40 @@ export const getOtherUsers = async (req,res) =>{
     }
 }
 
+// UPDATED follow function
 export const follow = async(req,res)=>{
     try {
         const loggedInUserId = req.body.id; 
         const userId = req.params.id; 
-        const loggedInUser = await User.findById(loggedInUserId);//patel
-        const user = await User.findById(userId);//keshav
+        const loggedInUser = await User.findById(loggedInUserId);
+        const user = await User.findById(userId);
         if(!user.followers.includes(loggedInUserId)){
             await user.updateOne({$push:{followers:loggedInUserId}});
             await loggedInUser.updateOne({$push:{following:userId}});
         }else{
             return res.status(400).json({
-                message:`User already followed to ${user.name}`
+                message:`User already followed ${user.name}`
             })
         };
+        // Return the updated user object for instant UI updates
+        const updatedLoggedInUser = await User.findById(loggedInUserId).select("-password");
         return res.status(200).json({
-            message:`${loggedInUser.name} just follow to ${user.name}`,
+            message:`${loggedInUser.name} just followed ${user.name}`,
+            user: updatedLoggedInUser,
             success:true
         })
     } catch (error) {
         console.log(error);
     }
 }
+
+// UPDATED unfollow function
 export const unfollow = async (req,res) => {
     try {
         const loggedInUserId = req.body.id; 
         const userId = req.params.id; 
-        const loggedInUser = await User.findById(loggedInUserId);//patel
-        const user = await User.findById(userId);//keshav
+        const loggedInUser = await User.findById(loggedInUserId);
+        const user = await User.findById(userId);
         if(loggedInUser.following.includes(userId)){
             await user.updateOne({$pull:{followers:loggedInUserId}});
             await loggedInUser.updateOne({$pull:{following:userId}});
@@ -183,8 +189,11 @@ export const unfollow = async (req,res) => {
                 message:`User has not followed yet`
             })
         };
+        // Return the updated user object for instant UI updates
+        const updatedLoggedInUser = await User.findById(loggedInUserId).select("-password");
         return res.status(200).json({
-            message:`${loggedInUser.name} unfollow to ${user.name}`,
+            message:`${loggedInUser.name} unfollowed ${user.name}`,
+            user: updatedLoggedInUser,
             success:true
         })
     } catch (error) {

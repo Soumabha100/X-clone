@@ -6,17 +6,20 @@ const tweetSlice = createSlice({
         tweets: null,
     },
     reducers: {
-        // Action to set all tweets
         setTweets: (state, action) => {
             state.tweets = action.payload;
         },
-        // Action to add a new tweet to the top of the list
         addTweet: (state, action) => {
-            // unshift adds the new tweet to the beginning of the array
             state.tweets.unshift(action.payload);
+        },
+        // Add the new removeTweet action
+        removeTweet: (state, action) => {
+            // Filter out the tweet with the matching ID
+            state.tweets = state.tweets.filter(tweet => tweet._id !== action.payload);
         },
     },
 });
 
-export const { setTweets, addTweet } = tweetSlice.actions;
+// Export the new action
+export const { setTweets, addTweet, removeTweet } = tweetSlice.actions;
 export default tweetSlice.reducer;

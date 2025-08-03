@@ -1,6 +1,7 @@
 import { Tweet } from "../models/tweetSchema.js";
 import { User } from "../models/userSchema.js";
 
+
 export const createTweet = async (req, res) => {
   try {
     const { description, id } = req.body;
@@ -64,28 +65,51 @@ export const deleteTweet = async (req, res) => {
   }
 };
 
+// UPDATED likeOrDislike function
 export const likeOrDislike = async (req, res) => {
   try {
-    const loggedInUserId = req.body.id;
+    const loggedInUserId = req.user; // Get user ID from the authenticated session (more secure)
     const tweetId = req.params.id;
     const tweet = await Tweet.findById(tweetId);
+
+    if (!tweet) {
+        return res.status(404).json({ message: "Tweet not found." });
+    }
+
+    let updatedTweet;
+
     if (tweet.like.includes(loggedInUserId)) {
-      await Tweet.findByIdAndUpdate(tweetId, {
-        $pull: { like: loggedInUserId },
+      // Dislike
+      updatedTweet = await Tweet.findByIdAndUpdate(
+        tweetId,
+        { $pull: { like: loggedInUserId } },
+        { new: true } // This option returns the updated document
+      ).populate({
+          path: 'userId',
+          select: 'name username'
       });
       return res.status(200).json({
         message: "User disliked your tweet.",
+        tweet: updatedTweet,
       });
     } else {
-      await Tweet.findByIdAndUpdate(tweetId, {
-        $push: { like: loggedInUserId },
+      // Like
+      updatedTweet = await Tweet.findByIdAndUpdate(
+        tweetId,
+        { $push: { like: loggedInUserId } },
+        { new: true }
+      ).populate({
+          path: 'userId',
+          select: 'name username'
       });
       return res.status(200).json({
         message: "User liked your tweet.",
+        tweet: updatedTweet,
       });
     }
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -220,3 +244,47 @@ export const editTweet = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const createComment = async (req, res) => {
+        try {
+            const { id: tweetId } = req.params;
+            const { comment } = req.body;
+            const loggedInUserId = req.user;
+
+            if (!comment || comment.trim() === "") {
+                return res.status(400).json({ message: "Comment cannot be empty." });
+            }
+
+            const newComment = {
+                content: comment,
+                userId: loggedInUserId,
+            };
+
+            // Find the tweet and add the new comment
+            const updatedTweet = await Tweet.findByIdAndUpdate(
+                tweetId,
+                { $push: { comments: newComment } },
+                { new: true }
+            ).populate({
+                path: 'userId', // Populate the main tweet author
+                select: 'name username'
+            }).populate({
+                path: 'comments.userId', // Populate the author of each comment
+                select: 'name username'
+            });
+
+            if (!updatedTweet) {
+                return res.status(404).json({ message: "Tweet not found." });
+            }
+
+            return res.status(201).json({
+                message: "Comment added successfully.",
+                success: true,
+                tweet: updatedTweet,
+            });
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: "Internal Server Error" });
+        }
+    };

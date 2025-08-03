@@ -163,7 +163,6 @@ export const getUserTweets = async (req, res) => {
 
 export const getPublicTweets = async (req, res) => {
   try {
-    // Find all tweets, populate the author's details, and sort by newest
     const allPublicTweets = await Tweet.find()
       .populate({
         path: "userId",
@@ -172,6 +171,50 @@ export const getPublicTweets = async (req, res) => {
       .sort({ createdAt: -1 });
 
     return res.status(200).json(allPublicTweets);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const editTweet = async (req, res) => {
+  try {
+    const { id: tweetId } = req.params;
+    const { description } = req.body;
+    const loggedInUserId = req.user;
+
+    const tweet = await Tweet.findById(tweetId);
+
+    if (!tweet) {
+      return res.status(404).json({ message: "Tweet not found." });
+    }
+
+    if (tweet.userId.toString() !== loggedInUserId.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to edit this tweet." });
+    }
+
+    if (!description || description.trim() === "") {
+      return res.status(400).json({ message: "Description cannot be empty." });
+    }
+
+    // Update the tweet
+    tweet.description = description;
+    tweet.isEdited = true; // THIS IS THE MISSING LINE
+    await tweet.save();
+
+    // Find the updated tweet and populate it to send back
+    const updatedTweet = await Tweet.findById(tweetId).populate({
+      path: "userId",
+      select: "name username",
+    });
+
+    return res.status(200).json({
+      message: "Tweet updated successfully.",
+      success: true,
+      tweet: updatedTweet,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });

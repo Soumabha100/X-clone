@@ -53,33 +53,45 @@ export const Register = async (req, res) => {
         console.log(error);
     }
 }
+// UPDATED Login function
 export const Login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        if (!email || !password) {
+        const { identifier, password } = req.body; // Changed from 'email' to 'identifier'
+        if (!identifier || !password) {
             return res.status(401).json({
                 message: "All fields are required.",
                 success: false
             })
         };
-        const user = await User.findOne({ email });
+        
+        // Find the user by either their email or their username
+        const user = await User.findOne({ 
+            $or: [
+                { email: identifier }, 
+                { username: identifier }
+            ] 
+        });
+
         if (!user) {
             return res.status(401).json({
-                message: "Incorrect email or password",
+                message: "Incorrect email, username, or password",
                 success: false
             })
         }
+
         const isMatch = await bcryptjs.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({
-                message: "Incorect email or password",
+                message: "Incorrect email, username, or password",
                 success: false
             });
         }
+        
         const tokenData = {
             userId: user._id
         }
         const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, { expiresIn: "1d" });
+        
         return res.status(201).cookie("token", token, { expiresIn: "1d", httpOnly: true }).json({
             message: `Welcome back ${user.name}`,
             user,

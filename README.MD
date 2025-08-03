@@ -1,8 +1,6 @@
 X-Clone 🐦
 X-Clone is a full-stack social media application built with the MERN stack (MongoDB, Express.js, React.js, Node.js) that replicates the core functionalities of X (formerly Twitter). It provides a complete user experience, from secure authentication and real-time notifications to creating, editing, and interacting with posts. This project serves as a comprehensive demonstration of modern web development principles, showcasing a robust backend API connected to a dynamic, responsive React frontend.
 
-(Note: You can replace the link above with a URL to a screenshot of your finished application.)
-
 ✨ Features
 🔐 Secure JWT Authentication: Robust user registration and login system using JSON Web Tokens stored in secure httpOnly cookies. Users can sign in with either their email or username.
 

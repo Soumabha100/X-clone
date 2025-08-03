@@ -10,16 +10,26 @@ const tweetSlice = createSlice({
             state.tweets = action.payload;
         },
         addTweet: (state, action) => {
-            state.tweets.unshift(action.payload);
+            // Ensure tweets is an array before trying to unshift
+            if (Array.isArray(state.tweets)) {
+                state.tweets.unshift(action.payload);
+            }
         },
-        // Add the new removeTweet action
         removeTweet: (state, action) => {
-            // Filter out the tweet with the matching ID
             state.tweets = state.tweets.filter(tweet => tweet._id !== action.payload);
+        },
+        // ADD THIS NEW ACTION
+        updateTweet: (state, action) => {
+            const updatedTweet = action.payload;
+            if (Array.isArray(state.tweets)) {
+                state.tweets = state.tweets.map(tweet => 
+                    tweet._id === updatedTweet._id ? updatedTweet : tweet
+                );
+            }
         },
     },
 });
 
 // Export the new action
-export const { setTweets, addTweet, removeTweet } = tweetSlice.actions;
+export const { setTweets, addTweet, removeTweet, updateTweet } = tweetSlice.actions;
 export default tweetSlice.reducer;

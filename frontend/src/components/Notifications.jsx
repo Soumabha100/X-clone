@@ -15,6 +15,8 @@ import toast from "react-hot-toast";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
+//Test
+
 // A helper component to render the correct icon based on the notification type.
 const NotificationIcon = ({ type }) => {
   if (type === "like") return <IoMdHeart className="text-pink-600 text-2xl" />;

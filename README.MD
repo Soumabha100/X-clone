@@ -107,6 +107,17 @@ npm run dev
 
 The application should now be live! The backend will be running on http://localhost:8000 and the frontend on http://localhost:5173.
 
+👥 Authors & Contributors
+This project is the result of the collaborative effort of a dedicated team of students from the Swami Vivekananda Institute of Science and Technology (SVIST).
+
+Soumabha Majumder
+
+Tamalika Das
+
+Suman Bera
+
+Department of Computer Science & Engineering, 2nd Year
+
 📡 API Endpoints Overview
 The API is structured around REST principles. All protected routes are secured by a JWT authentication middleware.
 

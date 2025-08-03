@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // Import useState
+import React, { useState, useEffect } from "react"; // Import useEffect
 import { FaXTwitter } from "react-icons/fa6";
 import { GoHomeFill } from "react-icons/go";
 import { FaSearch } from "react-icons/fa";
@@ -12,20 +12,50 @@ import toast from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
 import { clearUser } from "../redux/userSlice";
 import { setLoading } from "../redux/uiSlice";
-import LogoutModal from "./LogoutModal"; // Import the new modal component
+import LogoutModal from "./LogoutModal";
+import { setUnreadCount } from "../redux/notificationSlice"; // Import the action
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
 const Sidebar = () => {
   const { user } = useSelector((store) => store.user);
+  const { unreadCount } = useSelector((store) => store.notification);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  // State to control the visibility of the logout modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
+  // --- THIS IS THE FIX ---
+  // This useEffect hook runs when the component mounts and periodically
+  // fetches the unread notification count from the backend.
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (user) {
+        // Only fetch if a user is logged in
+        try {
+          const res = await axios.get(
+            `${API_BASE_URL}/notifications/unread-count`,
+            {
+              withCredentials: true,
+            }
+          );
+          // Dispatch the count to our Redux store
+          dispatch(setUnreadCount(res.data.count));
+        } catch (error) {
+          // We don't show a toast here because it's a background task
+          console.error("Failed to fetch unread notification count:", error);
+        }
+      }
+    };
+
+    fetchUnreadCount(); // Fetch immediately when the component loads
+    const intervalId = setInterval(fetchUnreadCount, 30000); // And then check again every 30 seconds
+
+    // Cleanup function to stop the interval when the component unmounts
+    return () => clearInterval(intervalId);
+  }, [user, dispatch]);
+
   const logoutHandler = async () => {
-    setIsLogoutModalOpen(false); // Close the modal first
+    setIsLogoutModalOpen(false);
     dispatch(setLoading({ status: true, message: "Logging you out..." }));
     try {
       const res = await axios.get(`${API_BASE_URL}/user/logout`, {
@@ -44,7 +74,6 @@ const Sidebar = () => {
   };
 
   return (
-    // Use a React Fragment to allow the modal to be a sibling
     <>
       <div className="w-[20%] sticky top-0 h-screen">
         <div className="ml-5 mt-3">
@@ -67,10 +96,17 @@ const Sidebar = () => {
             <FaSearch size="28px" />
             <h1 className="font-bold text-lg">Explore</h1>
           </Link>
+          {/* Corrected Notification Link */}
           <Link
             to="/home/notifications"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+            className="relative flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
           >
+            {/* Notification Badge */}
+            {unreadCount > 0 && (
+              <span className="absolute top-2 left-5 w-5 h-5 bg-blue-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-black">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
             <IoMdNotifications size="28px" />
             <h1 className="font-bold text-lg">Notifications</h1>
           </Link>
@@ -88,7 +124,6 @@ const Sidebar = () => {
             <FaHeart size="28px" />
             <h1 className="font-bold text-lg">Premium</h1>
           </Link>
-          {/* This div now opens the modal instead of logging out directly */}
           <div
             onClick={() => setIsLogoutModalOpen(true)}
             className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
@@ -104,7 +139,6 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Conditionally render the modal */}
       {isLogoutModalOpen && (
         <LogoutModal
           onConfirm={logoutHandler}

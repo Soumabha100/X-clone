@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Avatar from "react-avatar";
 import { MdClose } from "react-icons/md";
 import axios from "axios";
@@ -13,6 +13,14 @@ const CommentModal = ({ tweet, onClose }) => {
   const [comment, setComment] = useState("");
   const { user: loggedInUser } = useSelector((store) => store.user);
   const dispatch = useDispatch();
+  const textareaRef = useRef(null); // Ref for the textarea
+
+  // Autofocus the textarea when the modal opens
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
 
   const submitHandler = async () => {
     try {
@@ -24,7 +32,7 @@ const CommentModal = ({ tweet, onClose }) => {
 
       dispatch(updateTweet(res.data.tweet));
       toast.success(res.data.message);
-      onClose();
+      onClose(); // Close the modal on success
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to post comment.");
       console.error(error);
@@ -42,38 +50,47 @@ const CommentModal = ({ tweet, onClose }) => {
             <MdClose size="24px" />
           </button>
         </div>
-        {/* Original Tweet Snippet */}
-        <div className="flex mb-4">
-          <Avatar name={tweet.userId.name} size="40" round={true} />
-          <div className="ml-3">
+
+        <div className="flex">
+          {/* Left side with avatars and connecting line */}
+          <div className="flex flex-col items-center mr-4">
+            <Avatar name={tweet.userId.name} size="40" round={true} />
+            {/* Vertical connecting line */}
+            <div className="w-0.5 h-full bg-gray-700 my-2"></div>
+          </div>
+
+          {/* Right side with original tweet content */}
+          <div className="w-full">
             <div className="flex items-center">
               <h1 className="font-bold">{tweet.userId.name}</h1>
               <p className="text-neutral-500 ml-2">
                 @{tweet.userId.username} · {format(tweet.createdAt)}
               </p>
             </div>
-            <p className="text-white">{tweet.description}</p>
-            <p className="mt-2 text-sm text-neutral-500">
+            <p className="text-white mt-1">{tweet.description}</p>
+            <p className="mt-4 text-sm text-neutral-500">
               Replying to{" "}
               <span className="text-blue-500">@{tweet.userId.username}</span>
             </p>
           </div>
         </div>
+
         {/* Comment Input Area */}
-        <div className="flex">
+        <div className="flex mt-4">
           <Avatar name={loggedInUser.name} size="40" round={true} />
-          <div className="w-full ml-3">
+          <div className="w-full ml-4">
             <textarea
+              ref={textareaRef} // Assign the ref
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full bg-transparent text-lg resize-none outline-none min-h-[100px] focus:ring-0"
+              className="w-full bg-transparent text-lg resize-none outline-none min-h-[80px] focus:ring-0"
               placeholder="Post your reply"
             />
-            <div className="text-right mt-2">
+            <div className="text-right mt-2 border-t border-gray-700 pt-4">
               <button
                 onClick={submitHandler}
                 disabled={!comment.trim()}
-                className="px-4 py-2 text-md font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2 text-md font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 Reply
               </button>

@@ -7,6 +7,8 @@ import Notifications from "./Notifications";
 import Explore from "./Explore";
 import Premium from "./Premium";
 import Login from "./Login";
+import LoadingOverlay from "./LoadingOverlay";
+
 
 const Body = () => {
   const appRouter = createBrowserRouter([
@@ -48,6 +50,7 @@ const Body = () => {
 
   return (
     <div>
+      <LoadingOverlay />
       <RouterProvider router={appRouter} />
     </div>
   );

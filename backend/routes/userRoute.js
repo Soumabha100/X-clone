@@ -1,4 +1,6 @@
 import express from "express";
+import multer from 'multer';
+import storage from "../config/cloudinary.js";
 import {
   Login,
   Register,
@@ -9,11 +11,13 @@ import {
   logout,
   unfollow,
   getMe,
+  editProfile,
 } from "../controllers/userController.js";
 import isAuthenticated from "../config/auth.js";
 
 // Create a new router object from Express to handle user-related routes.
 const router = express.Router();
+const upload = multer({ storage });
 
 // --- Public Routes (No authentication required) ---
 
@@ -55,6 +59,16 @@ router.route("/follow/:id").post(isAuthenticated, follow);
 // Route for the logged-in user to unfollow another user.
 // POST /api/v1/user/unfollow/:id
 router.route("/unfollow/:id").post(isAuthenticated, unfollow);
+
+// This route uses upload.fields() to accept up to one file for each specified field.
+router.route("/profile/edit").post(
+  isAuthenticated,
+  upload.fields([
+    { name: "profileImg", maxCount: 1 },
+    { name: "bannerImg", maxCount: 1 },
+  ]),
+  editProfile
+);
 
 // Export the router to be used in the main server file (index.js).
 export default router;

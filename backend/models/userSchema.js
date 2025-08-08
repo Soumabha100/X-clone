@@ -27,6 +27,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    bio: {
+        type: String,
+        default: "",
+    },
+    profileImg: {
+        type: String,
+        default: "",
+    },
+    bannerImg: {
+        type: String,
+        default: "",
+    },
     // An array of user IDs who are following this user.
     followers: {
       type: Array,

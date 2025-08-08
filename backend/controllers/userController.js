@@ -275,3 +275,50 @@ export const unfollow = async (req, res) => {
     console.log(error);
   }
 };
+
+/**
+    *  Handles updating a user's profile information, including text and images.
+     */
+
+export const editProfile = async (req, res) => {
+  try {
+    const loggedInUserId = req.user;
+    const { name, bio } = req.body;
+
+    // Find the user to update.
+    const user = await User.findById(loggedInUserId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Update text fields if they were provided.
+    if (name) user.name = name;
+    if (bio) user.bio = bio;
+
+    // Multer provides uploaded file info in req.files.
+    // We check for 'profileImg' and 'bannerImg' and save their Cloudinary URLs.
+    if (req.files) {
+      if (req.files.profileImg) {
+        user.profileImg = req.files.profileImg[0].path;
+      }
+      if (req.files.bannerImg) {
+        user.bannerImg = req.files.bannerImg[0].path;
+      }
+    }
+
+    // Save the updated user document.
+    await user.save();
+
+    // Return the updated user object (without the password).
+    const updatedUser = await User.findById(loggedInUserId).select("-password");
+
+    return res.status(200).json({
+      message: "Profile updated successfully.",
+      user: updatedUser,
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

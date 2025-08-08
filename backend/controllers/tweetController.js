@@ -15,28 +15,33 @@ const populateOptions = [
   },
 ];
 
-/**
- * Creates a new tweet for the logged-in user.
- */
+
+// UPDATED createTweet function to handle both image and text-only posts correctly
 export const createTweet = async (req, res) => {
   try {
-    const { description, id } = req.body;
-    // Basic validation to ensure required fields are present.
-    if (!description || !id) {
+    const { description } = req.body;
+    // THIS IS THE FIX: Get the user ID from the secure session, not the request body.
+    const id = req.user; 
+
+    // The image URL from Cloudinary is provided by multer in req.file.path.
+    const imageUrl = req.file ? req.file.path : "";
+
+    // A tweet must have a description.
+    if (!description) {
       return res.status(401).json({
-        message: "Fields are required.",
+        message: "Description is required.",
         success: false,
       });
     }
-    // Create the new tweet document in the database.
+
     const newTweet = await Tweet.create({
       description,
       userId: id,
+      image: imageUrl, // Save the Cloudinary URL.
     });
-    // Fetch the newly created tweet and populate it with user details to send back.
-    const populatedTweet = await Tweet.findById(newTweet._id).populate(
-      populateOptions
-    );
+
+    const populatedTweet = await Tweet.findById(newTweet._id).populate(populateOptions);
+    
     return res.status(201).json({
       message: "Tweet created successfully.",
       success: true,
@@ -44,6 +49,7 @@ export const createTweet = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

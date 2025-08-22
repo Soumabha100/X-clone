@@ -134,28 +134,36 @@ export const logout = (req, res) => {
  */
 export const bookmark = async (req, res) => {
   try {
-    const loggedInUserId = req.body.id;
+    const loggedInUserId = req.user; // We get this from the isAuthenticated middleware
     const tweetId = req.params.id;
     const user = await User.findById(loggedInUserId);
+
     if (user.bookmarks.includes(tweetId)) {
       // If already bookmarked, remove it.
       await User.findByIdAndUpdate(loggedInUserId, {
         $pull: { bookmarks: tweetId },
       });
+      const updatedUser = await User.findById(loggedInUserId).select("-password");
       return res.status(200).json({
         message: "Removed from bookmarks.",
+        user: updatedUser,
+        success: true,
       });
     } else {
       // If not bookmarked, add it.
       await User.findByIdAndUpdate(loggedInUserId, {
         $push: { bookmarks: tweetId },
       });
+      const updatedUser = await User.findById(loggedInUserId).select("-password");
       return res.status(200).json({
         message: "Saved to bookmarks.",
+        user: updatedUser,
+        success: true,
       });
     }
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

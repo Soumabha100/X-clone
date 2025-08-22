@@ -16,6 +16,7 @@ import { Link } from "react-router-dom";
 import { removeTweet, updateTweet } from "../redux/tweetSlice";
 import EditTweetModal from "./EditTweetModal";
 import CommentModal from "./CommentModal";
+import { setUser } from "../redux/userSlice";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
@@ -34,6 +35,7 @@ const Tweet = ({ tweet }) => {
     like,
     comments,
     image,
+    retweetedBy,
     userId: author,
     createdAt,
     isEdited,
@@ -73,6 +75,21 @@ const Tweet = ({ tweet }) => {
     }
   };
 
+  const retweetHandler = async () => {
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/tweet/retweet/${tweetId}`,
+        { id: loggedInUser?._id }, // The body is not strictly needed but good practice
+        { withCredentials: true }
+      );
+      dispatch(updateTweet(res.data.tweet));
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to retweet.");
+      console.error(error);
+    }
+  };
+
   const commentClickHandler = () => {
     if (comments && comments.length > 0) {
       setShowComments(!showComments);
@@ -81,9 +98,52 @@ const Tweet = ({ tweet }) => {
     }
   };
 
+  const bookmarkHandler = async () => {
+    try {
+      const res = await axios.put(
+        `${API_BASE_URL}/user/bookmark/${tweetId}`,
+        {}, // The body is empty, user ID is from the cookie
+        { withCredentials: true }
+      );
+      // Dispatch the updated user object to the Redux store
+      dispatch(setUser(res.data.user));
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to save bookmark.");
+      console.error(error);
+    }
+  };
+
+  // Find which of the users we follow (or ourselves) retweeted this tweet.
+  const relevantRetweeterId = loggedInUser?.following
+    .concat(loggedInUser?._id)
+    .find((id) => tweet.retweetedBy.includes(id));
+  const retweeter = tweet.retweetedBy.includes(relevantRetweeterId)
+    ? loggedInUser.following.find((u) => u._id === relevantRetweeterId) ||
+      loggedInUser
+    : null;
+  const isRetweet =
+    tweet.retweetedBy.length > 0 &&
+    retweeter &&
+    retweeter._id !== tweet.userId._id;
+
+  // A helper to get the retweeter's name. It checks if it's you or someone else.
+  const getRetweeterName = () => {
+    if (!isRetweet) return "";
+    return relevantRetweeterId === loggedInUser._id ? "You" : tweet.userId.name;
+  };
+
   return (
     <>
+      {/* --- RETWEET BANNER --- */}
       <div className="flex flex-col p-4 border-b border-neutral-800">
+        {isRetweet && (
+          <div className="flex items-center text-neutral-500 text-sm mb-2 ml-4">
+            <BiRepost size="20px" className="mr-2" />
+            <span>{getRetweeterName()} Retweeted</span>
+          </div>
+        )}
+
         <div className="flex">
           <Link to={`/home/profile/${author._id}`}>
             <Avatar
@@ -164,9 +224,19 @@ const Tweet = ({ tweet }) => {
                 <FaComment size="18px" />
                 <p className="ml-2 text-sm">{comments?.length || 0}</p>
               </div>
-              <div className="flex items-center duration-200 cursor-pointer hover:text-green-500 select-none">
-                <BiRepost size="24px" />
-                <p className="ml-2 text-sm">0</p>
+              <div
+                onClick={retweetHandler}
+                className="flex items-center duration-200 cursor-pointer hover:text-green-500 select-none"
+              >
+                <BiRepost
+                  size="24px"
+                  className={
+                    retweetedBy.includes(loggedInUser?._id)
+                      ? "text-green-500"
+                      : ""
+                  }
+                />
+                <p className="ml-2 text-sm">{retweetedBy.length}</p>
               </div>
               <div
                 onClick={likeOrDislikeHandler}
@@ -180,9 +250,19 @@ const Tweet = ({ tweet }) => {
                 />
                 <p className="ml-2 text-sm">{like.length}</p>
               </div>
-              <div className="flex items-center duration-200 cursor-pointer hover:text-blue-500 select-none">
-                <FaBookmark size="18px" />
-                <p className="ml-2 text-sm">0</p>
+              {/* --- UPDATED BOOKMARK BUTTON --- */}
+              <div
+                onClick={bookmarkHandler}
+                className="flex items-center duration-200 cursor-pointer hover:text-blue-500 select-none"
+              >
+                <FaBookmark
+                  size="18px"
+                  className={
+                    loggedInUser?.bookmarks.includes(tweetId)
+                      ? "text-blue-500"
+                      : ""
+                  }
+                />
               </div>
             </div>
           </div>

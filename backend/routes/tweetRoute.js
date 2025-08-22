@@ -10,7 +10,8 @@ import {
     getFollowingTweets, 
     getUserTweets, 
     getPublicTweets, 
-    createComment 
+    createComment,
+    retweet
 } from "../controllers/tweetController.js";
 import isAuthenticated from "../config/auth.js";
 
@@ -23,7 +24,6 @@ const upload = multer({ storage });
 // before the createTweet controller is called.
 router.route("/create").post(isAuthenticated, upload.single("image"), createTweet);
 
-// --- All other routes remain the same ---
 router.route("/delete/:id").delete(isAuthenticated, deleteTweet);
 router.route("/like/:id").put(isAuthenticated, likeOrDislike);
 router.route("/edit/:id").put(isAuthenticated, editTweet);
@@ -32,5 +32,6 @@ router.route("/followingtweets/:id").get(isAuthenticated, getFollowingTweets);
 router.route("/user/:id").get(isAuthenticated, getUserTweets);
 router.route("/public").get(isAuthenticated, getPublicTweets);
 router.route("/comment/:id").post(isAuthenticated, createComment);
+router.route("/retweet/:id").post(isAuthenticated, retweet);
 
 export default router;

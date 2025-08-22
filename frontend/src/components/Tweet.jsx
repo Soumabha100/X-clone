@@ -257,8 +257,10 @@ const Tweet = ({ tweet }) => {
               >
                 <FaBookmark
                   size="18px"
+                  // THE FIX: Check if loggedInUser.bookmarks exists and is an array before calling .includes()
                   className={
-                    loggedInUser?.bookmarks.includes(tweetId)
+                    loggedInUser?.bookmarks &&
+                    loggedInUser.bookmarks.includes(tweetId)
                       ? "text-blue-500"
                       : ""
                   }

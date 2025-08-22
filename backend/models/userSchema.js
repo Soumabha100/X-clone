@@ -28,16 +28,16 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     bio: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
     profileImg: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
     bannerImg: {
-        type: String,
-        default: "",
+      type: String,
+      default: "",
     },
     // An array of user IDs who are following this user.
     followers: {
@@ -51,8 +51,8 @@ const userSchema = new mongoose.Schema(
     },
     // An array of tweet IDs that the user has bookmarked.
     bookmarks: {
-      type: Array,
-      default: [],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tweet",
     },
   },
   { timestamps: true }

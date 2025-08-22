@@ -64,7 +64,11 @@ const Widgets = () => {
           >
             <div className="flex items-center">
               <div className="mr-2">
-                <Avatar name={user.name} size="40" round={true} />
+                <Avatar
+                src={user.profileImg}
+                name={user.name}
+                size="40"
+                round={true} />
               </div>
               <div>
                 <h1 className="font-bold text-sm">{user.name}</h1>

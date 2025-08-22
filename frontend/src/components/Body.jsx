@@ -15,6 +15,7 @@ import TweetPage from "./TweetPage";
  * It uses react-router-dom to define all possible URL paths and
  * which component should be rendered for each path.
  */
+// Update 1
 const Body = () => {
   // createBrowserRouter defines the application's route configuration.
   const appRouter = createBrowserRouter([

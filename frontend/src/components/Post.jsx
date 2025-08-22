@@ -88,9 +88,14 @@ const Post = () => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full text-lg bg-transparent border-none outline-none resize-none"
+            // --- ADD THIS onInput HANDLER ---
+            onInput={(e) => {
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
+            className="w-full text-lg bg-transparent border-none outline-none resize-none overflow-hidden" // <-- Add overflow-hidden
             placeholder="What's happening?"
-            rows="3"
+            rows="1" // <-- Change rows to 1
           />
           {/* --- FINAL CORRECTED Image Preview Section --- */}
           {imagePreview && (

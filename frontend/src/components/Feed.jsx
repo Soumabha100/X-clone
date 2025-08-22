@@ -4,6 +4,7 @@ import Tweet from "./Tweet";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { setTweets } from "../redux/tweetSlice";
+import TweetSkeleton from "./TweetSkeleton";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
@@ -95,10 +96,18 @@ const Feed = () => {
       {/* Renders the component for creating a new tweet. */}
       <Post />
 
-      {/* Map over the 'tweets' array from the Redux store and render a Tweet component for each one. */}
-      {tweets?.map((tweet) => (
-        <Tweet key={tweet._id} tweet={tweet} />
-      ))}
+      {/* --- SKELETON LOADER LOGIC --- */}
+      {!tweets ? (
+        // If tweets are null (loading for the first time), show 3 skeletons.
+        <div>
+          <TweetSkeleton />
+          <TweetSkeleton />
+          <TweetSkeleton />
+        </div>
+      ) : (
+        // Otherwise, map over and display the actual tweets.
+        tweets.map((tweet) => <Tweet key={tweet._id} tweet={tweet} />)
+      )}
     </div>
   );
 };

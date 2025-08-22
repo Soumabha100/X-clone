@@ -147,31 +147,78 @@ export const likeOrDislike = async (req, res) => {
 };
 
 /**
+ * Toggles the "retweet" status of a tweet for the logged-in user.
+ */
+export const retweet = async (req, res) => {
+  try {
+    const loggedInUserId = req.user;
+    const tweetId = req.params.id;
+    const tweet = await Tweet.findById(tweetId);
+
+    if (!tweet) {
+      return res.status(404).json({ message: "Tweet not found." });
+    }
+
+    // Check if the user has already retweeted this tweet
+    if (tweet.retweetedBy.includes(loggedInUserId)) {
+      // If so, un-retweet it
+      await Tweet.findByIdAndUpdate(tweetId, {
+        $pull: { retweetedBy: loggedInUserId },
+      });
+      const updatedTweet = await Tweet.findById(tweetId).populate(populateOptions);
+      return res.status(200).json({
+        message: "Retweet removed.",
+        tweet: updatedTweet,
+      });
+    } else {
+      // If not, retweet it
+      await Tweet.findByIdAndUpdate(tweetId, {
+        $push: { retweetedBy: loggedInUserId },
+      });
+
+      // (Optional) You could add a notification here for retweets as well
+      // await Notification.create({ ... });
+
+      const updatedTweet = await Tweet.findById(tweetId).populate(populateOptions);
+      return res.status(200).json({
+        message: "Tweet retweeted successfully.",
+        tweet: updatedTweet,
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
  * Fetches the main feed for a user (their own tweets + tweets from people they follow).
  */
 export const getAllTweets = async (req, res) => {
   try {
     const id = req.params.id;
     const loggedInUser = await User.findById(id);
-    // Fetch the user's own tweets.
-    const loggedInUserTweets = await Tweet.find({ userId: id }).populate(
-      populateOptions
-    );
-    // Fetch tweets from every user in the 'following' list.
-    const followingUserTweet = await Promise.all(
-      loggedInUser.following.map((otherUsersId) => {
-        return Tweet.find({ userId: otherUsersId }).populate(populateOptions);
-      })
-    );
-    // Combine both sets of tweets.
-    const allTweets = loggedInUserTweets.concat(...followingUserTweet);
+
+    // Create a list of all relevant users: the logged-in user plus everyone they follow.
+    const relevantUserIds = [...loggedInUser.following, id];
+
+    // Fetch tweets that are either created by or retweeted by any of the relevant users.
+    const feedTweets = await Tweet.find({
+      $or: [
+        { userId: { $in: relevantUserIds } },
+        { retweetedBy: { $in: relevantUserIds } },
+      ],
+    })
+    .populate(populateOptions)
+    // IMPORTANT: Sort by updatedAt to show recent retweets at the top.
+    .sort({ updatedAt: -1 });
+
     return res.status(200).json({
-      tweets: allTweets.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      ),
+      tweets: feedTweets,
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

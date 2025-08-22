@@ -32,6 +32,20 @@ const tweetSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+
+    retweetedBy: {
+      type: Array,
+      default: [],
+    },
+    isQuoteTweet: {
+        type: Boolean,
+        default: false,
+    },
+    originalTweet: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tweet',
+    },
+    
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

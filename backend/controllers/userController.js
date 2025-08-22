@@ -143,18 +143,15 @@ export const bookmark = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // THE FINAL FIX: Convert ObjectIds to strings before comparing
     const isBookmarked =
       Array.isArray(user.bookmarks) &&
       user.bookmarks.map((id) => id.toString()).includes(tweetId);
 
     if (isBookmarked) {
-      // Unbookmark
       await User.findByIdAndUpdate(loggedInUserId, {
         $pull: { bookmarks: tweetId },
       });
     } else {
-      // Bookmark
       await User.findByIdAndUpdate(loggedInUserId, {
         $push: { bookmarks: tweetId },
       });
@@ -351,7 +348,6 @@ export const getBookmarkedTweets = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // THE DEFINITIVE FIX: Use Array.isArray() to ensure we return an array
     const bookmarkedTweets = Array.isArray(user.bookmarks)
       ? [...user.bookmarks].reverse()
       : [];

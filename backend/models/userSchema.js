@@ -50,10 +50,12 @@ const userSchema = new mongoose.Schema(
       default: [],
     },
     // An array of tweet IDs that the user has bookmarked.
-    bookmarks: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tweet",
-    },
+    bookmarks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tweet",
+      },
+    ],
   },
   { timestamps: true }
 ); // Automatically adds 'createdAt' and 'updatedAt' fields.

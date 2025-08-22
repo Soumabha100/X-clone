@@ -94,41 +94,48 @@ const Notifications = () => {
         // Map over the notifications array to display each one.
         <div>
           {notifications &&
-            notifications.map((notif) => (
-              <Link
-                to={
-                  notif.tweetId
-                    ? `/home/tweet/${notif.tweetId}` // Link to the tweet if it's a like/comment
-                    : `/home/profile/${notif.fromUser._id}` // Link to the user's profile if it's a follow
-                }
-                key={notif._id}
-                className="block hover:bg-neutral-900/50 transition-colors duration-200"
-              >
-                <div className="flex p-4 border-b border-neutral-800">
-                  <div className="mr-4">
-                    <NotificationIcon type={notif.type} />
-                  </div>
-                  <div className="w-full">
-                    <div className="flex items-center mb-2">
-                      <Avatar
-                        name={notif.fromUser.name}
-                        size="40"
-                        round={true}
-                      />
+            notifications.map((notif) => {
+              // THE FIX: If fromUser is null, we skip rendering this notification.
+              if (!notif.fromUser) {
+                return null;
+              }
+
+              return (
+                <Link
+                  to={
+                    notif.tweetId
+                      ? `/home/tweet/${notif.tweetId}`
+                      : `/home/profile/${notif.fromUser._id}`
+                  }
+                  key={notif._id}
+                  className="block hover:bg-neutral-900/50 transition-colors duration-200"
+                >
+                  <div className="flex p-4 border-b border-neutral-800">
+                    <div className="mr-4">
+                      <NotificationIcon type={notif.type} />
                     </div>
-                    <p className="text-white">
-                      <span className="font-bold">{notif.fromUser.name}</span>
-                      {notif.type === "like" && " liked your post."}
-                      {notif.type === "follow" && " started following you."}
-                      {notif.type === "comment" && " commented on your post."}
-                    </p>
-                    <p className="text-sm text-neutral-500 mt-1">
-                      {format(notif.createdAt)}
-                    </p>
+                    <div className="w-full">
+                      <div className="flex items-center mb-2">
+                        <Avatar
+                          name={notif.fromUser.name}
+                          size="40"
+                          round={true}
+                        />
+                      </div>
+                      <p className="text-white">
+                        <span className="font-bold">{notif.fromUser.name}</span>
+                        {notif.type === "like" && " liked your post."}
+                        {notif.type === "follow" && " started following you."}
+                        {notif.type === "comment" && " commented on your post."}
+                      </p>
+                      <p className="text-sm text-neutral-500 mt-1">
+                        {format(notif.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
         </div>
       )}
     </div>

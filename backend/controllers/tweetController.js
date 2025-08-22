@@ -10,7 +10,7 @@ export const createTweet = async (req, res) => {
   try {
     const { description } = req.body;
     // THIS IS THE FIX: Get the user ID from the secure session, not the request body.
-    const id = req.user; 
+    const id = req.user;
 
     // The image URL from Cloudinary is provided by multer in req.file.path.
     const imageUrl = req.file ? req.file.path : "";
@@ -29,8 +29,10 @@ export const createTweet = async (req, res) => {
       image: imageUrl, // Save the Cloudinary URL.
     });
 
-    const populatedTweet = await Tweet.findById(newTweet._id).populate(populateOptions);
-    
+    const populatedTweet = await Tweet.findById(newTweet._id).populate(
+      populateOptions
+    );
+
     return res.status(201).json({
       message: "Tweet created successfully.",
       success: true,
@@ -154,7 +156,9 @@ export const retweet = async (req, res) => {
       await Tweet.findByIdAndUpdate(tweetId, {
         $pull: { retweetedBy: loggedInUserId },
       });
-      const updatedTweet = await Tweet.findById(tweetId).populate(populateOptions);
+      const updatedTweet = await Tweet.findById(tweetId).populate(
+        populateOptions
+      );
       return res.status(200).json({
         message: "Retweet removed.",
         tweet: updatedTweet,
@@ -168,7 +172,9 @@ export const retweet = async (req, res) => {
       // (Optional) You could add a notification here for retweets as well
       // await Notification.create({ ... });
 
-      const updatedTweet = await Tweet.findById(tweetId).populate(populateOptions);
+      const updatedTweet = await Tweet.findById(tweetId).populate(
+        populateOptions
+      );
       return res.status(200).json({
         message: "Tweet retweeted successfully.",
         tweet: updatedTweet,
@@ -187,20 +193,16 @@ export const getAllTweets = async (req, res) => {
   try {
     const id = req.params.id;
     const loggedInUser = await User.findById(id);
-
-    // Create a list of all relevant users: the logged-in user plus everyone they follow.
     const relevantUserIds = [...loggedInUser.following, id];
 
-    // Fetch tweets that are either created by or retweeted by any of the relevant users.
     const feedTweets = await Tweet.find({
       $or: [
         { userId: { $in: relevantUserIds } },
         { retweetedBy: { $in: relevantUserIds } },
       ],
     })
-    .populate(populateOptions)
-    // IMPORTANT: Sort by updatedAt to show recent retweets at the top.
-    .sort({ updatedAt: -1 });
+      .populate(populateOptions)
+      .sort({ updatedAt: -1 });
 
     return res.status(200).json({
       tweets: feedTweets,
@@ -257,7 +259,7 @@ export const getPublicTweets = async (req, res) => {
   try {
     const allPublicTweets = await Tweet.find()
       .populate(populateOptions)
-      .sort({ createdAt: -1 });
+      .sort({ updatedAt: -1 }); // Sort by updatedAt for consistency with retweets
     return res.status(200).json(allPublicTweets);
   } catch (error) {
     console.log(error);
@@ -348,6 +350,25 @@ export const createComment = async (req, res) => {
       success: true,
       tweet: updatedTweet,
     });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * Fetches a single tweet by its ID.
+ */
+export const getTweetById = async (req, res) => {
+  try {
+    const tweetId = req.params.id;
+    const tweet = await Tweet.findById(tweetId).populate(populateOptions);
+
+    if (!tweet) {
+      return res.status(404).json({ message: "Tweet not found." });
+    }
+
+    return res.status(200).json(tweet);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });

@@ -129,8 +129,8 @@ const Tweet = ({ tweet }) => {
 
   // A helper to get the retweeter's name. It checks if it's you or someone else.
   const getRetweeterName = () => {
-    if (!isRetweet) return "";
-    return relevantRetweeterId === loggedInUser._id ? "You" : tweet.userId.name;
+    if (!isRetweet) return '';
+    return relevantRetweeterId === loggedInUser._id ? 'You' : retweeter?.name;
   };
 
   return (

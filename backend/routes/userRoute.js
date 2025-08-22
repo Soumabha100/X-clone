@@ -12,6 +12,7 @@ import {
   unfollow,
   getMe,
   editProfile,
+  deleteUser,
   getBookmarkedTweets,
 } from "../controllers/userController.js";
 import isAuthenticated from "../config/auth.js";
@@ -72,6 +73,9 @@ router.route("/profile/edit").post(
   ]),
   editProfile
 );
+
+// Delete Route
+router.route("/delete/:id").delete(isAuthenticated, deleteUser);
 
 
 

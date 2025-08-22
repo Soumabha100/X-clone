@@ -193,12 +193,20 @@ export const getAllTweets = async (req, res) => {
   try {
     const id = req.params.id;
     const loggedInUser = await User.findById(id);
-    const relevantUserIds = [...loggedInUser.following, id];
+
+    if (!loggedInUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const followingIds = loggedInUser.following;
+    const selfId = loggedInUser._id;
 
     const feedTweets = await Tweet.find({
       $or: [
-        { userId: { $in: relevantUserIds } },
-        { retweetedBy: { $in: relevantUserIds } },
+        // Condition 1: Tweets created by people the user follows.
+        { userId: { $in: followingIds } },
+        // Condition 2: Tweets retweeted by the user OR people they follow.
+        { retweetedBy: { $in: [...followingIds, selfId] } },
       ],
     })
       .populate(populateOptions)

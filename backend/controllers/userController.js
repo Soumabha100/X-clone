@@ -1,3 +1,4 @@
+import { Tweet } from "../models/tweetSchema.js";
 import { User } from "../models/userSchema.js";
 import { Notification } from "../models/notificationSchema.js";
 import bcryptjs from "bcryptjs";
@@ -31,36 +32,50 @@ export const getMe = async (req, res) => {
 export const Register = async (req, res) => {
   try {
     const { name, username, email, password } = req.body;
-    // Basic input validation.
     if (!name || !username || !email || !password) {
       return res.status(401).json({
         message: "All fields are required.",
         success: false,
       });
     }
-    // Check if a user with the given email already exists.
+
     const user = await User.findOne({ email });
     if (user) {
       return res.status(401).json({
-        message: "User already exist.",
+        message: "User already exists.",
         success: false,
       });
     }
-    // Hash the password before saving to the database.
+
     const hashedPassword = await bcryptjs.hash(password, 16);
 
-    await User.create({
+    // Create the new user and get the created document back
+    const newUser = await User.create({
       name,
       username,
       email,
       password: hashedPassword,
     });
-    return res.status(201).json({
-      message: "Account created successfully.",
-      success: true,
+
+    // --- NEW LOGIN LOGIC ---
+    // Sign a token for the new user
+    const tokenData = { userId: newUser._id };
+    const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, {
+      expiresIn: "1d",
     });
+
+    // Send the token as a cookie and return the user data, just like in the Login function
+    return res
+      .status(201)
+      .cookie("token", token, { expiresIn: "1d", httpOnly: true })
+      .json({
+        message: `Welcome, ${newUser.name}!`,
+        user: newUser,
+        success: true,
+      });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -325,6 +340,77 @@ export const editProfile = async (req, res) => {
     return res.status(200).json({
       message: "Profile updated successfully.",
       user: updatedUser,
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * Handles deleting a user and cleaning up all their associated data.
+ */
+export const deleteUser = async (req, res) => {
+  try {
+    const loggedInUserId = req.user;
+    const userIdToDelete = req.params.id;
+
+    // Security Check: Ensure the logged-in user is deleting their own account.
+    // In a real app, you might also allow an admin to do this.
+    if (loggedInUserId.toString() !== userIdToDelete) {
+      return res
+        .status(403)
+        .json({
+          message: "Unauthorized. You can only delete your own account.",
+        });
+    }
+
+    const userToDelete = await User.findById(userIdToDelete);
+    if (!userToDelete) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // --- Start Cleanup Process ---
+
+    // 1. Delete all tweets created by the user
+    await Tweet.deleteMany({ userId: userIdToDelete });
+
+    // 2. Delete all notifications related to the user (sent or received)
+    await Notification.deleteMany({
+      $or: [{ fromUser: userIdToDelete }, { toUser: userIdToDelete }],
+    });
+
+    // 3. Remove this user from the 'followers' list of users they were following
+    await User.updateMany(
+      { _id: { $in: userToDelete.following } },
+      { $pull: { followers: userIdToDelete } }
+    );
+
+    // 4. Remove this user from the 'following' list of their followers
+    await User.updateMany(
+      { _id: { $in: userToDelete.followers } },
+      { $pull: { following: userIdToDelete } }
+    );
+
+    // 5. Remove the user's likes, retweets, and bookmarks from all tweets in the database
+    await Tweet.updateMany(
+      {},
+      {
+        $pull: {
+          like: userIdToDelete,
+          retweetedBy: userIdToDelete,
+          bookmarks: userIdToDelete, // Note: bookmarks are on the user, this is for tweets if you add it there
+        },
+      }
+    );
+
+    // 6. Finally, delete the user document itself
+    await User.findByIdAndDelete(userIdToDelete);
+
+    // 7. Clear the authentication cookie
+    return res.cookie("token", "", { expiresIn: new Date(Date.now()) }).json({
+      message: `User ${userToDelete.username} has been successfully deleted.`,
       success: true,
     });
   } catch (error) {

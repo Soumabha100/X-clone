@@ -105,13 +105,17 @@ const Login = () => {
             withCredentials: true,
           }
         );
+        // On success, dispatch user data to Redux to log them in
+        dispatch(setUser(res.data.user));
         toast.success(res.data.message);
-        setIsLogin(true); // Switch to the login form on successful registration.
+
+        // Redirect to the home page after a short delay
+        setTimeout(() => {
+          navigate("/home");
+        }, 1500);
       } catch (error) {
         toast.error(error.response?.data?.message || "An error occurred.");
-      } finally {
-        // Always turn off the loading overlay after a registration attempt.
-        setIsLoading(false);
+        setIsLoading(false); // Stop loading on error
       }
     }
     // Clear all form fields after submission.

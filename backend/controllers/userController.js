@@ -143,7 +143,9 @@ export const bookmark = async (req, res) => {
       await User.findByIdAndUpdate(loggedInUserId, {
         $pull: { bookmarks: tweetId },
       });
-      const updatedUser = await User.findById(loggedInUserId).select("-password");
+      const updatedUser = await User.findById(loggedInUserId).select(
+        "-password"
+      );
       return res.status(200).json({
         message: "Removed from bookmarks.",
         user: updatedUser,
@@ -154,7 +156,9 @@ export const bookmark = async (req, res) => {
       await User.findByIdAndUpdate(loggedInUserId, {
         $push: { bookmarks: tweetId },
       });
-      const updatedUser = await User.findById(loggedInUserId).select("-password");
+      const updatedUser = await User.findById(loggedInUserId).select(
+        "-password"
+      );
       return res.status(200).json({
         message: "Saved to bookmarks.",
         user: updatedUser,
@@ -285,8 +289,8 @@ export const unfollow = async (req, res) => {
 };
 
 /**
-    *  Handles updating a user's profile information, including text and images.
-     */
+ *  Handles updating a user's profile information, including text and images.
+ */
 
 export const editProfile = async (req, res) => {
   try {
@@ -325,6 +329,31 @@ export const editProfile = async (req, res) => {
       user: updatedUser,
       success: true,
     });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * Fetches all tweets that the logged-in user has bookmarked.
+ */
+export const getBookmarkedTweets = async (req, res) => {
+  try {
+    const loggedInUserId = req.user;
+    const user = await User.findById(loggedInUserId).populate({
+      path: "bookmarks", // The field we want to populate
+      populate: populateOptions, // Use the same populate options as our tweets
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // The 'bookmarks' field now contains the full tweet objects
+    const bookmarkedTweets = user.bookmarks.reverse(); // Show newest first
+
+    return res.status(200).json(bookmarkedTweets);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });

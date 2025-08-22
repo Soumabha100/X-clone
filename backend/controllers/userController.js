@@ -2,6 +2,7 @@ import { User } from "../models/userSchema.js";
 import { Notification } from "../models/notificationSchema.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import populateOptions from "../config/populateOptions.js";
 
 /**
  * Fetches the profile of the currently authenticated user.
@@ -134,33 +135,37 @@ export const logout = (req, res) => {
  */
 export const bookmark = async (req, res) => {
   try {
-    const loggedInUserId = req.user; // We get this from the isAuthenticated middleware
+    const loggedInUserId = req.user;
     const tweetId = req.params.id;
     const user = await User.findById(loggedInUserId);
 
-    if (user.bookmarks.includes(tweetId)) {
-      // If already bookmarked, remove it.
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // THE FINAL FIX: Convert ObjectIds to strings before comparing
+    const isBookmarked =
+      Array.isArray(user.bookmarks) &&
+      user.bookmarks.map((id) => id.toString()).includes(tweetId);
+
+    if (isBookmarked) {
+      // Unbookmark
       await User.findByIdAndUpdate(loggedInUserId, {
         $pull: { bookmarks: tweetId },
       });
-      const updatedUser = await User.findById(loggedInUserId).select("-password");
-      return res.status(200).json({
-        message: "Removed from bookmarks.",
-        user: updatedUser,
-        success: true,
-      });
     } else {
-      // If not bookmarked, add it.
+      // Bookmark
       await User.findByIdAndUpdate(loggedInUserId, {
         $push: { bookmarks: tweetId },
       });
-      const updatedUser = await User.findById(loggedInUserId).select("-password");
-      return res.status(200).json({
-        message: "Saved to bookmarks.",
-        user: updatedUser,
-        success: true,
-      });
     }
+
+    const updatedUser = await User.findById(loggedInUserId).select("-password");
+    return res.status(200).json({
+      message: isBookmarked ? "Removed from bookmarks." : "Saved to bookmarks.",
+      user: updatedUser,
+      success: true,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -211,7 +216,7 @@ export const getOtherUsers = async (req, res) => {
  */
 export const follow = async (req, res) => {
   try {
-    const loggedInUserId = req.body.id;
+    const loggedInUserId = req.body;
     const userId = req.params.id;
 
     // Prevent a user from following themselves.
@@ -257,7 +262,7 @@ export const follow = async (req, res) => {
  */
 export const unfollow = async (req, res) => {
   try {
-    const loggedInUserId = req.body.id;
+    const loggedInUserId = req.body;
     const userId = req.params.id;
     const loggedInUser = await User.findById(loggedInUserId);
     const user = await User.findById(userId);
@@ -285,8 +290,8 @@ export const unfollow = async (req, res) => {
 };
 
 /**
-    *  Handles updating a user's profile information, including text and images.
-     */
+ *  Handles updating a user's profile information, including text and images.
+ */
 
 export const editProfile = async (req, res) => {
   try {
@@ -325,6 +330,33 @@ export const editProfile = async (req, res) => {
       user: updatedUser,
       success: true,
     });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * Fetches all tweets that the logged-in user has bookmarked.
+ */
+export const getBookmarkedTweets = async (req, res) => {
+  try {
+    const loggedInUserId = req.user;
+    const user = await User.findById(loggedInUserId).populate({
+      path: "bookmarks",
+      populate: populateOptions,
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // THE DEFINITIVE FIX: Use Array.isArray() to ensure we return an array
+    const bookmarkedTweets = Array.isArray(user.bookmarks)
+      ? [...user.bookmarks].reverse()
+      : [];
+
+    return res.status(200).json(bookmarkedTweets);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });

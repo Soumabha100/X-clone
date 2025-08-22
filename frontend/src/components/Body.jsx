@@ -5,6 +5,7 @@ import Feed from "./Feed";
 import Profile from "./Profile";
 import Notifications from "./Notifications";
 import Explore from "./Explore";
+import Bookmarks from "./Bookmarks";
 import Premium from "./Premium";
 import Login from "./Login";
 import LoadingOverlay from "./LoadingOverlay";
@@ -50,6 +51,11 @@ const Body = () => {
           // Route for the explore page, e.g., '/home/explore'.
           path: "explore",
           element: <Explore />,
+        },
+        {
+          // Route for the bookmarks page, e.g., '/home/bookmarks'.
+          path: "bookmarks",
+          element: <Bookmarks />,
         },
       ],
     },

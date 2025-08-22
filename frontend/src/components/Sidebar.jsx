@@ -6,6 +6,7 @@ import { IoMdNotifications } from "react-icons/io";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa";
 import { RiLogoutBoxRLine } from "react-icons/ri";
+import {FaBookmark} from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -130,6 +131,14 @@ const Sidebar = () => {
           >
             <FaUser size="28px" />
             <h1 className="font-bold text-lg">Profile</h1>
+          </Link>
+          {/* --- BOOKMARKS --- */}
+          <Link
+            to="/home/bookmarks"
+            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+          >
+            <FaBookmark size="28px" />
+            <h1 className="font-bold text-lg">Bookmarks</h1>
           </Link>
           <Link
             to="/premium"

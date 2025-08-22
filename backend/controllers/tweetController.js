@@ -1,20 +1,9 @@
 import { Tweet } from "../models/tweetSchema.js";
 import { Notification } from "../models/notificationSchema.js";
 import { User } from "../models/userSchema.js";
+import populateOptions from "../config/populateOptions.js";
 
 // A helper object for Mongoose's .populate() method.
-// This ensures we consistently fetch the same user details for tweets and comments.
-const populateOptions = [
-  {
-    path: "userId", // Populate the author of the tweet.
-    select: "name username profileImg", 
-  },
-  {
-    path: "comments.userId", // Populate the author of each comment within the tweet.
-    select: "name username profileImg",
-  },
-];
-
 
 // UPDATED createTweet function to handle both image and text-only posts correctly
 export const createTweet = async (req, res) => {

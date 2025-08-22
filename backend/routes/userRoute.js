@@ -12,6 +12,7 @@ import {
   unfollow,
   getMe,
   editProfile,
+  getBookmarkedTweets,
 } from "../controllers/userController.js";
 import isAuthenticated from "../config/auth.js";
 
@@ -44,6 +45,8 @@ router.route("/me").get(isAuthenticated, getMe);
 // PUT /api/v1/user/bookmark/:id
 router.route("/bookmark/:id").put(isAuthenticated, bookmark);
 
+router.route("/bookmarks").get(isAuthenticated, getBookmarkedTweets);
+
 // Route to get the public profile of any user by their ID.
 // GET /api/v1/user/profile/:id
 router.route("/profile/:id").get(isAuthenticated, getMyProfile);
@@ -69,6 +72,8 @@ router.route("/profile/edit").post(
   ]),
   editProfile
 );
+
+
 
 // Export the router to be used in the main server file (index.js).
 export default router;

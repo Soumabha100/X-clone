@@ -9,7 +9,7 @@ import Bookmarks from "./Bookmarks";
 import Premium from "./Premium";
 import Login from "./Login";
 import LoadingOverlay from "./LoadingOverlay";
-
+import TweetPage from "./TweetPage";
 /**
  * The Body component is the core of the application's routing.
  * It uses react-router-dom to define all possible URL paths and
@@ -51,6 +51,10 @@ const Body = () => {
           // Route for the explore page, e.g., '/home/explore'.
           path: "explore",
           element: <Explore />,
+        },
+        {
+          path: "tweet/:id",
+          element: <TweetPage />,
         },
         {
           // Route for the bookmarks page, e.g., '/home/bookmarks'.

@@ -33,7 +33,7 @@ const Tweet = ({ tweet }) => {
     description,
     like,
     comments,
-    image, // <-- NEW
+    image,
     userId: author,
     createdAt,
     isEdited,
@@ -87,6 +87,7 @@ const Tweet = ({ tweet }) => {
         <div className="flex">
           <Link to={`/home/profile/${author._id}`}>
             <Avatar
+              src={author.profileImg}
               name={author.name}
               size="40"
               round={true}

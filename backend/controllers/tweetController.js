@@ -7,11 +7,11 @@ import { User } from "../models/userSchema.js";
 const populateOptions = [
   {
     path: "userId", // Populate the author of the tweet.
-    select: "name username", // Only get the name and username.
+    select: "name username profileImg", 
   },
   {
     path: "comments.userId", // Populate the author of each comment within the tweet.
-    select: "name username",
+    select: "name username profileImg",
   },
 ];
 

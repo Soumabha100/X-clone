@@ -213,7 +213,7 @@ export const getOtherUsers = async (req, res) => {
  */
 export const follow = async (req, res) => {
   try {
-    const loggedInUserId = req.body;
+    const loggedInUserId = req.user;
     const userId = req.params.id;
 
     // Prevent a user from following themselves.
@@ -259,7 +259,7 @@ export const follow = async (req, res) => {
  */
 export const unfollow = async (req, res) => {
   try {
-    const loggedInUserId = req.body;
+    const loggedInUserId = req.user;
     const userId = req.params.id;
     const loggedInUser = await User.findById(loggedInUserId);
     const user = await User.findById(userId);

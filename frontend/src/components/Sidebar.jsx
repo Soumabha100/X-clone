@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CreatePostModal from "./CreatePostModal";
 import { FaXTwitter } from "react-icons/fa6";
 import { GoHomeFill } from "react-icons/go";
 import { FaSearch } from "react-icons/fa";
@@ -6,7 +7,7 @@ import { IoMdNotifications } from "react-icons/io";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa";
 import { RiLogoutBoxRLine } from "react-icons/ri";
-import {FaBookmark} from "react-icons/fa6";
+import { FaBookmark } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -33,6 +34,8 @@ const Sidebar = () => {
 
   // State to manage the visibility of the logout confirmation modal.
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
 
   // This effect runs on component mount and periodically fetches the unread
   // notification count to keep the badge in the UI up-to-date.
@@ -156,7 +159,10 @@ const Sidebar = () => {
             <h1 className="font-bold text-lg">Logout</h1>
           </div>
           <div className="mt-4">
-            <button className="w-full py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600">
+            <button
+              onClick={() => setIsPostModalOpen(true)}
+              className="w-full py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600"
+            >
               Post
             </button>
           </div>
@@ -169,6 +175,10 @@ const Sidebar = () => {
           onConfirm={logoutHandler}
           onCancel={() => setIsLogoutModalOpen(false)}
         />
+      )}
+
+      {isPostModalOpen && (
+        <CreatePostModal onClose={() => setIsPostModalOpen(false)} />
       )}
     </>
   );

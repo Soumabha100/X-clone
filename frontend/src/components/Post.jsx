@@ -8,10 +8,12 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { addTweet } from "../redux/tweetSlice";
+import { useSelector } from "react-redux";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
 const Post = () => {
+  const { user: loggedInUser } = useSelector((store) => store.user);
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -76,7 +78,8 @@ const Post = () => {
       <div className="flex items-start pb-4">
         <div>
           <Avatar
-            src="https://pbs.twimg.com/profile_images/1925460603214176256/l0rQysUt_400x400.jpg"
+            src={loggedInUser?.profileImg}
+            name={loggedInUser?.name}
             size="40"
             round={true}
           />

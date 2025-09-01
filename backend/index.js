@@ -6,12 +6,11 @@ import userRoute from "./routes/userRoute.js";
 import tweetRoute from "./routes/tweetRoute.js";
 import notificationRoute from "./routes/notificationRoute.js";
 import cors from "cors";
-import path from "path"; // Import the path module
+import path from "path";
 
-// Load environment variables from the .env file inside the backend folder
-dotenv.config({
-  path: "./backend/.env",
-});
+// FIX: Correct the dotenv config path
+// This will automatically look for the .env file in the current directory (the backend folder)
+dotenv.config();
 
 // Establish the connection to the MongoDB database.
 databaseConnection();

@@ -9,7 +9,7 @@ import Tweet from "./Tweet";
 import { setUser } from "../redux/userSlice";
 import EditProfileModal from "./EditProfileModal"; // Ensure this is imported
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -64,7 +64,7 @@ const Profile = () => {
       }
     };
     fetchProfileAndTweets();
-  }, [profileUserId, loggedInUser]); // Updated dependency to loggedInUser for re-fetching on profile edits
+  }, [profileUserId]);
 
   if (!profile) {
     return (
@@ -94,8 +94,12 @@ const Profile = () => {
           </div>
           <img
             src={
-              profile.bannerImg ||
-              "https://placehold.co/600x200/1DA1F2/FFFFFF?text=Banner"
+              profile.bannerImg
+                ? profile.bannerImg.replace(
+                    "/upload/",
+                    "/upload/w_600,f_auto,q_auto/"
+                  )
+                : "https://placehold.co/600x200/1DA1F2/FFFFFF?text=Banner"
             }
             alt="banner"
             className="w-full h-48 object-cover"

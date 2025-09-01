@@ -13,7 +13,7 @@ import { format } from "timeago.js";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 //Test
 

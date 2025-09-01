@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import Avatar from "react-avatar";
 import {
   FaComment,
@@ -18,9 +18,9 @@ import EditTweetModal from "./EditTweetModal";
 import CommentModal from "./CommentModal";
 import { setUser } from "../redux/userSlice";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
-const Tweet = ({ tweet }) => {
+const Tweet = memo(({ tweet }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -29,7 +29,6 @@ const Tweet = ({ tweet }) => {
   const { user: loggedInUser } = useSelector((store) => store.user);
   const dispatch = useDispatch();
 
-  // Destructure the new 'image' property from the tweet.
   const {
     description,
     like,
@@ -42,9 +41,9 @@ const Tweet = ({ tweet }) => {
     _id: tweetId,
   } = tweet;
 
-  if (!author) return null;
+  // --- HOOKS ARE NOW CALLED UNCONDITIONALLY AT THE TOP ---
 
-  const likeOrDislikeHandler = async () => {
+  const likeOrDislikeHandler = useCallback(async () => {
     try {
       const res = await axios.put(
         `${API_BASE_URL}/tweet/like/${tweetId}`,
@@ -57,9 +56,9 @@ const Tweet = ({ tweet }) => {
       toast.error(error.response?.data?.message || "Failed to like tweet.");
       console.error(error);
     }
-  };
+  }, [dispatch, tweetId, loggedInUser?._id]);
 
-  const deleteTweetHandler = async () => {
+  const deleteTweetHandler = useCallback(async () => {
     if (window.confirm("Are you sure you want to delete this tweet?")) {
       try {
         const res = await axios.delete(
@@ -73,13 +72,13 @@ const Tweet = ({ tweet }) => {
         console.error(error);
       }
     }
-  };
+  }, [dispatch, tweetId]);
 
-  const retweetHandler = async () => {
+  const retweetHandler = useCallback(async () => {
     try {
       const res = await axios.post(
         `${API_BASE_URL}/tweet/retweet/${tweetId}`,
-        { id: loggedInUser?._id }, // The body is not strictly needed but good practice
+        { id: loggedInUser?._id },
         { withCredentials: true }
       );
       dispatch(updateTweet(res.data.tweet));
@@ -88,54 +87,59 @@ const Tweet = ({ tweet }) => {
       toast.error(error.response?.data?.message || "Failed to retweet.");
       console.error(error);
     }
-  };
+  }, [dispatch, tweetId, loggedInUser?._id]);
 
-  const commentClickHandler = () => {
-    if (comments && comments.length > 0) {
-      setShowComments(!showComments);
-    } else {
-      setIsCommentModalOpen(true);
-    }
-  };
-
-  const bookmarkHandler = async () => {
+  const bookmarkHandler = useCallback(async () => {
     try {
       const res = await axios.put(
         `${API_BASE_URL}/user/bookmark/${tweetId}`,
-        {}, // The body is empty, user ID is from the cookie
+        {},
         { withCredentials: true }
       );
-      // Dispatch the updated user object to the Redux store
       dispatch(setUser(res.data.user));
       toast.success(res.data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save bookmark.");
       console.error(error);
     }
-  };
+  }, [dispatch, tweetId]);
 
-  // Find which of the users we follow (or ourselves) retweeted this tweet.
-  const relevantRetweeterId = loggedInUser?.following
-    .concat(loggedInUser?._id)
-    .find((id) => tweet.retweetedBy.includes(id));
-  const retweeter = tweet.retweetedBy.includes(relevantRetweeterId)
-    ? loggedInUser.following.find((u) => u._id === relevantRetweeterId) ||
-      loggedInUser
-    : null;
+  const commentClickHandler = useCallback(() => {
+    if (comments && comments.length > 0) {
+      setShowComments((prev) => !prev);
+    } else {
+      setIsCommentModalOpen(true);
+    }
+  }, [comments]);
+
+  if (!author) {
+    return null;
+  }
+
+  const relevantRetweeterId =
+    loggedInUser &&
+    [...(loggedInUser.following || []), loggedInUser._id].find((id) =>
+      retweetedBy.includes(id)
+    );
+
+  const retweeter =
+    loggedInUser &&
+    (retweetedBy.includes(relevantRetweeterId)
+      ? [...(loggedInUser.following || []), loggedInUser].find(
+          (u) => u._id === relevantRetweeterId
+        )
+      : null);
+
   const isRetweet =
-    tweet.retweetedBy.length > 0 &&
-    retweeter &&
-    retweeter._id !== tweet.userId._id;
+    retweetedBy.length > 0 && retweeter && retweeter._id !== author._id;
 
-  // A helper to get the retweeter's name. It checks if it's you or someone else.
   const getRetweeterName = () => {
-    if (!isRetweet) return '';
-    return relevantRetweeterId === loggedInUser._id ? 'You' : retweeter?.name;
+    if (!isRetweet) return "";
+    return relevantRetweeterId === loggedInUser?._id ? "You" : retweeter?.name;
   };
 
   return (
     <>
-      {/* --- RETWEET BANNER --- */}
       <div className="flex flex-col p-4 border-b border-neutral-800">
         {isRetweet && (
           <div className="flex items-center text-neutral-500 text-sm mb-2 ml-4">
@@ -191,23 +195,20 @@ const Tweet = ({ tweet }) => {
                 </div>
               )}
             </div>
-            {/* --- Tweet Content --- */}
             <div className="py-2">
               <p>{description}</p>
-              {/* --- Image container with skeleton loading --- */}
               {image && (
                 <div className="relative mt-3 w-full h-auto max-h-[400px] rounded-2xl border border-gray-700 overflow-hidden">
-                  {/* The skeleton placeholder, visible by default */}
                   {!isImageLoaded && (
                     <div className="w-full h-full min-h-[200px] bg-neutral-800 animate-pulse"></div>
                   )}
-                  {/* The actual image, hidden until it loads */}
                   <img
-                    src={image}
+                    src={image.replace(
+                      "/upload/",
+                      "/upload/w_600,f_auto,q_auto/"
+                    )}
                     alt="Tweet media"
-                    // When the image finishes loading, this event fires.
                     onLoad={() => setIsImageLoaded(true)}
-                    // Smoothly transition the opacity when isImageLoaded becomes true.
                     className={`w-full h-auto object-cover transition-opacity duration-500 ${
                       isImageLoaded ? "opacity-100" : "opacity-0"
                     }`}
@@ -215,7 +216,6 @@ const Tweet = ({ tweet }) => {
                 </div>
               )}
             </div>
-            {/* --- Tweet Action Buttons --- */}
             <div className="flex justify-between my-3 text-neutral-500">
               <div
                 onClick={commentClickHandler}
@@ -250,17 +250,14 @@ const Tweet = ({ tweet }) => {
                 />
                 <p className="ml-2 text-sm">{like.length}</p>
               </div>
-              {/* --- UPDATED BOOKMARK BUTTON --- */}
               <div
                 onClick={bookmarkHandler}
                 className="flex items-center duration-200 cursor-pointer hover:text-blue-500 select-none"
               >
                 <FaBookmark
                   size="18px"
-                  // THE FIX: Check if loggedInUser.bookmarks exists and is an array before calling .includes()
                   className={
-                    loggedInUser?.bookmarks &&
-                    loggedInUser.bookmarks.includes(tweetId)
+                    loggedInUser?.bookmarks?.includes(tweetId)
                       ? "text-blue-500"
                       : ""
                   }
@@ -269,7 +266,6 @@ const Tweet = ({ tweet }) => {
             </div>
           </div>
         </div>
-        {/* --- Comments Dropdown Section --- */}
         {showComments && comments && comments.length > 0 && (
           <div className="mt-4 pl-10 animate-fade-in">
             {comments.map((comment) => (
@@ -329,6 +325,6 @@ const Tweet = ({ tweet }) => {
       )}
     </>
   );
-};
+});
 
 export default Tweet;

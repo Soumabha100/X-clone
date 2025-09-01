@@ -69,7 +69,6 @@
     "keyv": "^4.5.4",
     "levn": "^0.4.1",
     "lightningcss": "^1.30.1",
-    "lightningcss-win32-x64-msvc": "^1.30.1",
     "locate-path": "^6.0.0",
     "lodash.merge": "^4.6.2",
     "lru-cache": "^5.1.1",

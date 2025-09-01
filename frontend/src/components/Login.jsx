@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { FaXTwitter } from "react-icons/fa6";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // <-- FIX: Added 'Link' here
 import toast, { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 // An array of engaging messages to display during the authentication process.
 const loadingMessages = [
@@ -16,11 +16,6 @@ const loadingMessages = [
   "Almost there...",
 ];
 
-/**
- * The Login component handles both user registration and sign-in.
- * It features a toggleable form and a polished, full-screen loading animation
- * to provide a smooth user experience during authentication.
- */
 const Login = () => {
   // State to toggle between the Login and Register form views.
   const [isLogin, setIsLogin] = useState(true);
@@ -30,45 +25,34 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [identifier, setIdentifier] = useState(""); // Used for either email or username during login.
+  const [identifier, setIdentifier] = useState("");
 
-  // State to control the visibility of the full-screen loading overlay.
   const [isLoading, setIsLoading] = useState(false);
-  // State to manage the currently displayed dynamic loading message.
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // This effect cycles through the 'loadingMessages' array when isLoading is true.
   useEffect(() => {
     let interval;
     if (isLoading) {
       let messageIndex = 0;
       interval = setInterval(() => {
-        // Loop through the messages array.
         messageIndex = (messageIndex + 1) % loadingMessages.length;
         setLoadingMessage(loadingMessages[messageIndex]);
-      }, 2000); // Change the message every 2 seconds.
+      }, 2000);
     }
-    // Cleanup function to clear the interval when the component unmounts or isLoading becomes false.
     return () => clearInterval(interval);
   }, [isLoading]);
 
-  /**
-   * Toggles the view between the login and registration forms.
-   */
   const toggleForm = () => {
     setIsLogin(!isLogin);
   };
 
-  /**
-   * Handles the form submission for both login and registration.
-   */
   const formSubmitHandler = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // Activate the full-screen loading overlay.
-    setLoadingMessage(loadingMessages[0]); // Reset to the first message.
+    setIsLoading(true);
+    setLoadingMessage(loadingMessages[0]);
 
     if (isLogin) {
       // --- LOGIN LOGIC ---
@@ -81,18 +65,14 @@ const Login = () => {
             withCredentials: true,
           }
         );
-        // On success, dispatch the user data to the Redux store.
         dispatch(setUser(res.data.user));
         toast.success(res.data.message);
-        // We use a timeout to allow the user to see the success toast.
-        // The loading overlay remains active during this time to prevent any "flash"
-        // of the login screen before the redirect is complete.
         setTimeout(() => {
           navigate("/home");
         }, 1500);
       } catch (error) {
         toast.error(error.response?.data?.message || "An error occurred.");
-        setIsLoading(false); // Turn off the loading overlay only on error.
+        setIsLoading(false);
       }
     } else {
       // --- REGISTER LOGIC ---
@@ -105,20 +85,16 @@ const Login = () => {
             withCredentials: true,
           }
         );
-        // On success, dispatch user data to Redux to log them in
         dispatch(setUser(res.data.user));
         toast.success(res.data.message);
-
-        // Redirect to the home page after a short delay
         setTimeout(() => {
           navigate("/home");
         }, 1500);
       } catch (error) {
         toast.error(error.response?.data?.message || "An error occurred.");
-        setIsLoading(false); // Stop loading on error
+        setIsLoading(false);
       }
     }
-    // Clear all form fields after submission.
     setName("");
     setUsername("");
     setEmail("");
@@ -129,15 +105,11 @@ const Login = () => {
   return (
     <div className="relative flex items-center justify-center w-full min-h-screen py-12 bg-black text-white">
       <Toaster />
-
-      {/* --- Full-Screen Loading Overlay --- */}
-      {/* This overlay provides a seamless transition during API calls. */}
       <div
         className={`absolute inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-80 transition-opacity duration-300 ${
           isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* A spinning 'X' logo for a modern loading animation. */}
         <div className="animate-spin">
           <FaXTwitter size={60} />
         </div>
@@ -145,7 +117,6 @@ const Login = () => {
           {loadingMessage}
         </p>
       </div>
-
       <div className="flex flex-col lg:flex-row items-center justify-evenly w-[90%] lg:w-[80%] max-w-6xl">
         <div className="mb-12 lg:mb-0">
           <FaXTwitter size={300} />
@@ -158,20 +129,7 @@ const Login = () => {
             {isLogin ? "to your account" : "Join today."}
           </h2>
           <form className="flex flex-col" onSubmit={formSubmitHandler}>
-            {isLogin ? (
-              // Login-specific input field.
-              <>
-                <input
-                  type="text"
-                  placeholder="Email or Username"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  className="px-4 py-3 my-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </>
-            ) : (
-              // Registration-specific input fields.
+            {!isLogin && (
               <>
                 <input
                   type="text"
@@ -189,17 +147,20 @@ const Login = () => {
                   className="px-4 py-3 my-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-blue-500"
                   required
                 />
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="px-4 py-3 my-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-blue-500"
-                  required
-                />
               </>
             )}
-            {/* The password field is common to both forms. */}
+            <input
+              type={isLogin ? "text" : "email"}
+              placeholder={isLogin ? "Email or Username" : "Email"}
+              value={isLogin ? identifier : email}
+              onChange={(e) =>
+                isLogin
+                  ? setIdentifier(e.target.value)
+                  : setEmail(e.target.value)
+              }
+              className="px-4 py-3 my-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-blue-500"
+              required
+            />
             <input
               type="password"
               placeholder="Password"
@@ -208,6 +169,16 @@ const Login = () => {
               className="px-4 py-3 my-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-blue-500"
               required
             />
+            {isLogin && (
+              <div className="text-right mt-2">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
             <button
               type="submit"
               className={`px-4 py-3 my-4 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600 transition-colors duration-200 ${
@@ -218,7 +189,6 @@ const Login = () => {
               {isLogin ? "Sign in" : "Create Account"}
             </button>
           </form>
-          {/* Link to toggle between Login and Register views. */}
           <div className="mt-6 text-center">
             <p className="text-neutral-400">
               {isLogin

@@ -10,7 +10,7 @@ import { useDispatch } from "react-redux";
 import { addTweet } from "../redux/tweetSlice";
 import { useSelector } from "react-redux";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 const Post = () => {
   const { user: loggedInUser } = useSelector((store) => store.user);

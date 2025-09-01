@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateTweet } from "../redux/tweetSlice";
 import { format } from "timeago.js";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 /**
  * A modal component that allows a user to post a reply to a specific tweet.

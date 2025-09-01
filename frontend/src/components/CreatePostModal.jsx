@@ -6,7 +6,7 @@ import { addTweet } from "../redux/tweetSlice";
 import { MdClose } from "react-icons/md";
 import Avatar from "react-avatar";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 const CreatePostModal = ({ onClose }) => {
   const [description, setDescription] = useState("");

@@ -7,7 +7,7 @@ import Tweet from "./Tweet"; // We'll reuse our Tweet component!
 import TweetSkeleton from "./TweetSkeleton";
 import { IoMdArrowRoundBack } from "react-icons/io";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
 const TweetPage = () => {
   const [tweet, setTweet] = useState(null);

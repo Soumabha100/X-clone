@@ -8,8 +8,7 @@ import notificationRoute from "./routes/notificationRoute.js";
 import cors from "cors";
 import path from "path";
 
-// FIX: Correct the dotenv config path
-// This will automatically look for the .env file in the current directory (the backend folder)
+// Load environment variables from the .env file in the current directory
 dotenv.config();
 
 // Establish the connection to the MongoDB database.
@@ -37,11 +36,12 @@ app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
 
 // --- Static Files Middleware for Production ---
-app.use(express.static(path.join(__dirname, "frontend/dist")));
+// FIX: Corrected path to go up one directory level to find the frontend build
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// For any route that is not an API route, serve the frontend's index.html file
+// FIX: Corrected path for the catch-all route
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 // Start the server

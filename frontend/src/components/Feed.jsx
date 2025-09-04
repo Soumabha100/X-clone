@@ -45,15 +45,15 @@ const Feed = () => {
 
   // This useEffect now correctly handles the tab switching logic.
   useEffect(() => {
-    // On the very first render, do nothing. The Preloader has already loaded the initial data.
+    // If this is the first render, do nothing. The Preloader handled it.
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
     }
 
-    // On subsequent renders (i.e., ONLY when activeTab changes), we fetch the new tab's data.
+    // On subsequent renders (tab switches), fetch the new data.
     fetchTabTweets();
-  }, [activeTab, fetchTabTweets]); // This dependency is now safe and will not cause an infinite loop.
+  }, [activeTab, fetchTabTweets]); // Changed dependency to activeTab
 
   const fetchMoreTweets = async () => {
     if (!user?._id) return;

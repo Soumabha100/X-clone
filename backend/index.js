@@ -9,53 +9,27 @@ import cors from "cors";
 import path from "path";
 import helmet from "helmet";
 import morgan from "morgan";
+import errorHandler from './middleware/errorHandler.js';
 
-// Middleware
-import errorHandler from './middleware/errorHandler.js'
-
-// Make sure dotenv is configured at the very top
+// Load environment variables
 dotenv.config();
 databaseConnection();
 
 const app = express();
-
 const __dirname = path.resolve();
 
-// Middlewares
-app.use(helmet());
-app.use(morgan("dev"));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.use(cookieParser());
-
-// --- START: PERMANENT & ROBUST CORS CONFIGURATION ---
+// --- Production-Ready CORS Configuration ---
+const whitelist = [
+    process.env.CORS_ORIGIN, // Your deployed frontend URL from Render ENV VARS
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // For debugging: log the origin of the incoming request
-    console.log(`Incoming request from origin: ${origin}`);
-    console.log(`Node environment is: ${process.env.NODE_ENV}`);
-
-    // Define the list of allowed origins
-    const whitelist = [
-      process.env.CORS_ORIGIN, // Your Vercel URL from .env
-    ];
-
-    // During development, add local URLs to the whitelist
-    if (process.env.NODE_ENV === "development") {
-      whitelist.push("http://localhost:5173", "http://127.0.0.1:5173");
-      // Add a regex to allow any local network IP
-      whitelist.push(/^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:5173$/);
-    }
-
-    // Check if the origin is in the whitelist or if there's no origin (e.g., Postman)
-    // The .some() method will check both strings and the regex pattern.
-    if (
-      !origin ||
-      whitelist.some((url) =>
-        typeof url === "string" ? url === origin : url.test(origin)
-      )
-    ) {
+    // In production, the 'origin' will be your frontend URL.
+    // The !origin check allows requests from tools like Postman or server-to-server.
+    if (!origin || whitelist.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("This origin is not allowed by CORS"));
@@ -64,27 +38,34 @@ const corsOptions = {
   credentials: true,
 };
 
+// --- Middleware Setup ---
+app.use(helmet()); // Sets important security headers
 app.use(cors(corsOptions));
-// --- END: PERMANENT & ROBUST CORS CONFIGURATION ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan("dev")); // For logging HTTP requests
 
-// API Routes
+// --- API Routes ---
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
 
-// This code is for deployment on Render
+// --- Static File Serving for Production ---
+// This block serves your built React app from the backend
 if (process.env.NODE_ENV === "production") {
-  // Correctly go up one level from 'backend' to the root, then into 'frontend/dist'
   const frontendDistPath = path.resolve(__dirname, "..", "frontend", "dist");
-
   app.use(express.static(frontendDistPath));
 
   app.get("*", (req, res) => {
+    // For any route not handled by the API, send the main HTML file.
+    // This allows React Router to take over on the client-side.
     res.sendFile(path.join(frontendDistPath, "index.html"));
   });
 }
 
-// Error Handling Middleware
+// --- Centralized Error Handler ---
+// This must be the last piece of middleware.
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;

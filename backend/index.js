@@ -74,9 +74,13 @@ app.use("/api/v1/notifications", notificationRoute);
 
 // This code is for deployment on Render
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "frontend/dist")));
+  // Correctly go up one level from 'backend' to the root, then into 'frontend/dist'
+  const frontendDistPath = path.resolve(__dirname, "..", "frontend", "dist");
+
+  app.use(express.static(frontendDistPath));
+
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+    res.sendFile(path.join(frontendDistPath, "index.html"));
   });
 }
 

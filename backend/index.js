@@ -8,7 +8,7 @@ import notificationRoute from "./routes/notificationRoute.js";
 import cors from "cors";
 import path from "path";
 
-// Load environment variables from the .env file in the current directory
+// Load environment variables
 dotenv.config();
 
 // Establish the connection to the MongoDB database.
@@ -36,15 +36,16 @@ app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
 
 // --- Static Files Middleware for Production ---
-// FIX: Corrected path to go up one directory level to find the frontend build
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-// FIX: Corrected path for the catch-all route
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+  });
+}
 
 // Start the server
-app.listen(process.env.PORT || 8000, () => {
-  console.log(`Server listening at port ${process.env.PORT || 8000}`);
+const PORT = process.env.PORT || 8000;
+// FIX: Added '0.0.0.0' to accept requests from the local network
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server listening at port ${PORT}`);
 });

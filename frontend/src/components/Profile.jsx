@@ -76,7 +76,7 @@ const Profile = () => {
 
   return (
     <>
-      <div className="w-full md:w-[50%] border-l border-r border-gray-800">
+      <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
         <div>
           <div className="flex items-center py-2 px-2">
             <Link

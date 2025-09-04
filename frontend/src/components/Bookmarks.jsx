@@ -30,7 +30,7 @@ const Bookmarks = () => {
   }, []);
 
   return (
-    <div className="w-full lg:w-[60%] border-l border-r border-neutral-800">
+    <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
       {/* --- Professional Header --- */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
         <div className="flex items-center justify-between p-4 border-b border-neutral-800">

@@ -48,7 +48,7 @@ const Explore = () => {
 
   return (
     // Main container for the Explore page.
-    <div className="w-full min-h-screen text-white border-l border-r border-neutral-800">
+    <div className="w-full md:w-[60%] border-l border-r border-neutral-800 text-white">
       {/* --- Sticky Header Section --- */}
       {/* This header contains the search bar and settings icon and stays at the top on scroll. */}
       <div className="sticky top-0 z-10 px-4 py-2 bg-black/80 backdrop-blur-md">

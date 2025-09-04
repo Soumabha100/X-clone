@@ -54,7 +54,7 @@ const Feed = () => {
   }, [user, activeTab, dispatch]);
 
   return (
-    <div className="w-full border-l border-r lg:w-[60%] border-neutral-700">
+    <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
       {/* --- Sticky Header with Navigation Tabs --- */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
         <div className="flex items-center justify-between border-b border-neutral-700">

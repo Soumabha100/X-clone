@@ -32,9 +32,8 @@ const Tweet = memo(({ tweet }) => {
   const dispatch = useDispatch();
   const optionsMenuRef = useRef(null);
 
-  const tweetId = tweet?._id; // Safely get tweetId for dependency arrays
+  const tweetId = tweet?._id;
 
-  // --- All useCallback hooks are also defined at the top-level ---
   const likeOrDislikeHandler = useCallback(async () => {
     if (!tweetId) return;
     try {
@@ -99,7 +98,6 @@ const Tweet = memo(({ tweet }) => {
     setIsCommentModalOpen(true);
   }, []);
 
-  // This useEffect is also a hook and must be at the top-level
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -113,12 +111,10 @@ const Tweet = memo(({ tweet }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- The early return (guard clause) comes AFTER all hooks have been defined ---
   if (!tweet || !tweet.userId) {
     return null;
   }
 
-  // Destructure props for use in JSX after the guard clause
   const {
     description,
     like,
@@ -129,7 +125,6 @@ const Tweet = memo(({ tweet }) => {
     createdAt,
     isEdited,
   } = tweet;
-
   const isRetweet =
     loggedInUser &&
     retweetedBy.includes(loggedInUser._id) &&
@@ -137,74 +132,75 @@ const Tweet = memo(({ tweet }) => {
 
   return (
     <>
-      <div className="flex flex-col p-4 border-b border-neutral-800">
+      <div className="border-b border-neutral-800 px-4 py-3 cursor-pointer transition-colors duration-200 hover:bg-neutral-900/50">
         {isRetweet && (
-          <div className="flex items-center text-neutral-500 text-sm mb-2 ml-4">
+          <div className="flex items-center text-neutral-500 text-sm mb-2 ml-10">
             <BiRepost size="20px" className="mr-2" />
             <span>You Retweeted</span>
           </div>
         )}
-        <div className="flex">
-          <Link to={`/home/profile/${author._id}`}>
-            <Avatar
-              src={author.profileImg}
-              name={author.name}
-              size="40"
-              round={true}
-              className="cursor-pointer"
-            />
-          </Link>
-          <div className="w-full px-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center min-w-0">
+        <div className="flex gap-3">
+          <div>
+            <Link to={`/home/profile/${author._id}`}>
+              <Avatar
+                src={author.profileImg}
+                name={author.name}
+                size="40"
+                round={true}
+              />
+            </Link>
+          </div>
+          <div className="w-full">
+            {/* --- START: NEW CSS GRID HEADER --- */}
+            <div className="grid grid-cols-[1fr_auto] items-start">
+              {/* This container handles both rows of text content */}
+              <div className="min-w-0">
                 <Link
                   to={`/home/profile/${author._id}`}
-                  className="flex items-center min-w-0 flex-shrink"
+                  className="font-bold hover:underline truncate text-white block"
                 >
-                  <h1 className="font-bold hover:underline cursor-pointer truncate">
-                    {author.name}
-                  </h1>
-                  <p className="ml-2 text-neutral-500 hover:underline cursor-pointer truncate">
-                    @{author.username}
-                  </p>
+                  {author.name}
                 </Link>
-                <div className="flex items-center flex-shrink-0 ml-2">
-                  <p className="text-neutral-600">·</p>
-                  <p className="ml-1 text-neutral-500 hover:underline cursor-pointer whitespace-nowrap">
-                    {format(createdAt)}
-                  </p>
-                  {isEdited && (
-                    <p className="ml-2 text-xs text-neutral-600">(edited)</p>
-                  )}
+                <div className="flex items-center gap-2 text-sm text-neutral-500">
+                  <span className="truncate">@{author.username}</span>
+                  <span>·</span>
+                  <span className="whitespace-nowrap">{format(createdAt)}</span>
+                  {isEdited && <span className="text-xs">(edited)</span>}
                 </div>
               </div>
 
+              {/* MORE OPTIONS MENU */}
               {loggedInUser?._id === author._id && (
-                <div className="relative flex-shrink-0" ref={optionsMenuRef}>
+                <div className="relative" ref={optionsMenuRef}>
                   <div
-                    onClick={() => setIsOptionsOpen((prev) => !prev)}
-                    className="p-2 rounded-full hover:bg-sky-900/50 hover:text-sky-500 cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsOptionsOpen((p) => !p);
+                    }}
+                    className="p-2 -mr-2 rounded-full hover:bg-sky-900/50 text-neutral-500 hover:text-sky-500"
                   >
                     <FiMoreHorizontal size="18px" />
                   </div>
                   {isOptionsOpen && (
-                    <div className="absolute top-10 right-0 w-48 bg-black border border-neutral-800 rounded-xl shadow-lg z-10 animate-pop-in">
+                    <div className="absolute top-8 right-0 w-48 bg-black border border-neutral-800 rounded-xl shadow-lg z-10 animate-pop-in">
                       <div
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           setIsOptionsOpen(false);
                           setIsEditModalOpen(true);
                         }}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-neutral-900 rounded-t-xl"
+                        className="flex items-center gap-3 px-4 py-3 text-white hover:bg-neutral-900 rounded-t-xl"
                       >
                         <FaPencilAlt />
                         <span className="font-bold">Edit</span>
                       </div>
                       <div
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           setIsOptionsOpen(false);
                           deleteTweetHandler();
                         }}
-                        className="flex items-center gap-3 px-4 py-3 text-red-500 cursor-pointer hover:bg-neutral-900 rounded-b-xl"
+                        className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-neutral-900 rounded-b-xl"
                       >
                         <FaTrash />
                         <span className="font-bold">Delete</span>
@@ -214,10 +210,11 @@ const Tweet = memo(({ tweet }) => {
                 </div>
               )}
             </div>
+            {/* --- END: NEW CSS GRID HEADER --- */}
 
             <Link to={`/home/tweet/${tweetId}`} className="block">
-              <div className="py-2">
-                <p className="whitespace-pre-wrap">{description}</p>
+              <div className="py-1">
+                <p className="whitespace-pre-wrap text-white">{description}</p>
                 {image && (
                   <div className="relative mt-3 w-full h-auto max-h-[400px] rounded-2xl border border-gray-700 overflow-hidden">
                     {!isImageLoaded && (
@@ -239,16 +236,22 @@ const Tweet = memo(({ tweet }) => {
               </div>
             </Link>
 
-            <div className="flex justify-between my-3 text-neutral-500">
+            <div className="flex justify-between mt-3 text-neutral-500">
               <div
-                onClick={commentClickHandler}
+                onClick={(e) => {
+                  e.preventDefault();
+                  commentClickHandler();
+                }}
                 className="flex items-center duration-200 cursor-pointer hover:text-blue-500 select-none"
               >
                 <FaComment size="18px" />
                 <p className="ml-2 text-sm">{comments?.length || 0}</p>
               </div>
               <div
-                onClick={retweetHandler}
+                onClick={(e) => {
+                  e.preventDefault();
+                  retweetHandler();
+                }}
                 className="flex items-center duration-200 cursor-pointer hover:text-green-500 select-none"
               >
                 <BiRepost
@@ -262,7 +265,10 @@ const Tweet = memo(({ tweet }) => {
                 <p className="ml-2 text-sm">{retweetedBy.length}</p>
               </div>
               <div
-                onClick={likeOrDislikeHandler}
+                onClick={(e) => {
+                  e.preventDefault();
+                  likeOrDislikeHandler();
+                }}
                 className="flex items-center duration-200 cursor-pointer hover:text-pink-600 select-none"
               >
                 <FaHeart
@@ -274,7 +280,10 @@ const Tweet = memo(({ tweet }) => {
                 <p className="ml-2 text-sm">{like.length}</p>
               </div>
               <div
-                onClick={bookmarkHandler}
+                onClick={(e) => {
+                  e.preventDefault();
+                  bookmarkHandler();
+                }}
                 className="flex items-center duration-200 cursor-pointer hover:text-blue-500 select-none"
               >
                 <FaBookmark
@@ -290,7 +299,6 @@ const Tweet = memo(({ tweet }) => {
           </div>
         </div>
       </div>
-
       {isEditModalOpen && (
         <EditTweetModal
           tweet={tweet}

@@ -18,7 +18,7 @@ const Feed = () => {
   const { tweets } = useSelector((store) => store.tweet);
   const dispatch = useDispatch();
 
-  // THE FIX: Use a ref to track if this is the first render.
+  // Use a ref to track if this is the first render.
   const isInitialMount = useRef(true);
 
   // This function is now responsible for fetching tweets when a tab is clicked.
@@ -51,9 +51,9 @@ const Feed = () => {
       return;
     }
 
-    // On subsequent renders (i.e., when activeTab changes), fetch the new tab's data.
+    // On subsequent renders (i.e., ONLY when activeTab changes), we fetch the new tab's data.
     fetchTabTweets();
-  }, [fetchTabTweets]); // The dependency is correct and will not cause a loop.
+  }, [activeTab, fetchTabTweets]); // This dependency is now safe and will not cause an infinite loop.
 
   const fetchMoreTweets = async () => {
     if (!user?._id) return;

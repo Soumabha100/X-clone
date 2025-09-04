@@ -20,7 +20,7 @@ import CommentModal from "./CommentModal";
 import { setUser } from "../redux/userSlice";
 import DeleteTweetModal from "./DeleteTweetModal";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Tweet = memo(({ tweet }) => {
   // --- All hooks are defined at the top-level, before any conditions or returns ---

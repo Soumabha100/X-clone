@@ -7,7 +7,7 @@ import { setTweets, addTweets } from "../redux/tweetSlice";
 import TweetSkeleton from "./TweetSkeleton";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Feed = () => {
   const [page, setPage] = useState(1);

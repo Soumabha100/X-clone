@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { FaXTwitter } from "react-icons/fa6";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

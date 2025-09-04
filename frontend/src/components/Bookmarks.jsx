@@ -7,7 +7,7 @@ import Tweet from "./Tweet";
 import TweetSkeleton from "./TweetSkeleton";
 import { IoSettingsOutline } from "react-icons/io5";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Bookmarks = () => {
   const [bookmarkedTweets, setBookmarkedTweets] = useState(null);

@@ -17,7 +17,7 @@ import { FiMoreHorizontal } from "react-icons/fi";
 import useWindowSize from "../hooks/useWindowSize";
 import { openCreatePostModal } from "../redux/uiSlice";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Sidebar = () => {
   const { user } = useSelector((store) => store.user);

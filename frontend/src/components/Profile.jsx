@@ -10,7 +10,7 @@ import { setUser, setVisitedProfile } from "../redux/userSlice"; // Import the n
 import EditProfileModal from "./EditProfileModal";
 import TweetSkeleton from "./TweetSkeleton"; // Import for smoother loading
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Profile = () => {
   const { id: profileUserId } = useParams();

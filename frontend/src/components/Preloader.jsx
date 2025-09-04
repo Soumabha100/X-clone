@@ -6,7 +6,7 @@ import { setTweets } from "../redux/tweetSlice";
 import { setInitialLoadComplete } from "../redux/uiSlice"; // <-- IMPORT THE NEW ACTION
 import { FaXTwitter } from "react-icons/fa6";
 
-const API_BASE_URL = "/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Preloader = ({ children }) => {
   const { user, isLoading: isUserLoading } = useSelector((store) => store.user);

@@ -5,6 +5,12 @@ import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import populateOptions from "../config/populateOptions.js";
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production', // Only true in production
+  sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+};
+
 /**
  * Fetches the profile of the currently authenticated user.
  */
@@ -45,7 +51,7 @@ export const Register = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcryptjs.hash(password, 12); // Optimal speed
+    const hashedPassword = await bcryptjs.hash(password, 12);
 
     const newUser = await User.create({
       name,
@@ -58,21 +64,19 @@ export const Register = async (req, res) => {
     const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, {
       expiresIn: "1d",
     });
-
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+    
+    // Use the dynamic cookie options
+    const finalCookieOptions = {
+        ...cookieOptions,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
     };
 
-    // Return a lean user object without the password
     const userToReturn = newUser.toObject();
     delete userToReturn.password;
 
     return res
       .status(201)
-      .cookie("token", token, cookieOptions)
+      .cookie("token", token, finalCookieOptions)
       .json({
         message: `Welcome, ${newUser.name}!`,
         user: userToReturn,
@@ -97,10 +101,9 @@ export const Login = async (req, res) => {
       });
     }
 
-    // Efficiently find the user and select only necessary fields
     const user = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
-    }).select("+password"); // Explicitly include password for comparison
+    }).select("+password");
 
     if (!user) {
       return res.status(401).json({
@@ -122,20 +125,18 @@ export const Login = async (req, res) => {
       expiresIn: "1d",
     });
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+    // Use the dynamic cookie options
+    const finalCookieOptions = {
+        ...cookieOptions,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
     };
 
-    // Prepare a lean user object to send back, excluding the password
     const userToReturn = user.toObject();
     delete userToReturn.password;
 
     return res
-      .status(200) // Changed to 200 for successful login
-      .cookie("token", token, cookieOptions)
+      .status(200)
+      .cookie("token", token, finalCookieOptions)
       .json({
         message: `Welcome back, ${user.name}`,
         user: userToReturn,
@@ -223,12 +224,6 @@ export const resetPassword = async (req, res) => {
  * Logs out the user by clearing their authentication cookie.
  */
 export const logout = (req, res) => {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-  };
-
   return res
     .cookie("token", "", { ...cookieOptions, expiresIn: new Date(Date.now()) })
     .json({

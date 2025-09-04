@@ -13,6 +13,7 @@ import { IoNotificationsOutline, IoNotifications } from "react-icons/io5";
 import { FaUser, FaRegUser } from "react-icons/fa";
 import { CiBookmark, CiLogout } from "react-icons/ci";
 import { RiQuillPenFill } from "react-icons/ri";
+import useWindowSize from "../hooks/useWindowSize"; // <-- IMPORT THE HOOK
 
 const API_BASE_URL = "/api/v1";
 
@@ -22,6 +23,10 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  // --- IMPLEMENT THE HOOK ---
+  const width = useWindowSize();
+  const isDesktop = width >= 768; // 768px is Tailwind's 'md' breakpoint
 
   const navItems = [
     { path: "/home", icon: GoHome, activeIcon: GoHomeFill, text: "Home" },
@@ -78,89 +83,97 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* --- Desktop Sidebar --- */}
-      <div className="hidden md:block w-[20%] sticky top-0 h-screen pr-4">
-        <div className="ml-5 mt-3">
-          <Link to="/home">
-            <FaXTwitter size={32} />
-          </Link>
-        </div>
-        <div className="mt-4">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-              >
-                {isActive ? (
-                  <item.activeIcon size="28px" />
-                ) : (
-                  <item.icon size="28px" />
-                )}
-                <h1
-                  className={`font-bold text-lg ${
-                    isActive && "font-extrabold"
-                  }`}
-                >
-                  {item.text}
-                </h1>
-              </Link>
-            );
-          })}
-          <Link
-            to="/home/bookmarks"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <CiBookmark size="28px" />
-            <h1 className="font-bold text-lg">Bookmarks</h1>
-          </Link>
-          <div
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <CiLogout size="28px" />
-            <h1 className="font-bold text-lg">Logout</h1>
+      {/* --- Conditionally Render Desktop Sidebar --- */}
+      {/* This entire block will NOT exist in the HTML on screens smaller than 768px */}
+      {isDesktop && (
+        <div className="md:w-[20%] sticky top-0 h-screen pr-4">
+          <div className="ml-5 mt-3">
+            <Link to="/home">
+              <FaXTwitter size={32} />
+            </Link>
           </div>
-          <button className="w-full mt-4 py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600">
-            Post
-          </button>
+          <div className="mt-4">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+                >
+                  {isActive ? (
+                    <item.activeIcon size="28px" />
+                  ) : (
+                    <item.icon size="28px" />
+                  )}
+                  <h1
+                    className={`font-bold text-lg ${
+                      isActive && "font-extrabold"
+                    }`}
+                  >
+                    {item.text}
+                  </h1>
+                </Link>
+              );
+            })}
+            <Link
+              to="/home/bookmarks"
+              className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+            >
+              <CiBookmark size="28px" />
+              <h1 className="font-bold text-lg">Bookmarks</h1>
+            </Link>
+            <div
+              onClick={() => setIsLogoutModalOpen(true)}
+              className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+            >
+              <CiLogout size="28px" />
+              <h1 className="font-bold text-lg">Logout</h1>
+            </div>
+            <button className="w-full mt-4 py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600">
+              Post
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* --- Mobile Bottom Navigation --- */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-800 z-50">
-        <div className="flex justify-around items-center h-16">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="relative flex-1 flex justify-center items-center h-full"
-              >
-                {item.text === "Notifications" && unreadCount > 0 && (
-                  <span className="absolute top-2 right-6 w-5 h-5 bg-blue-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-black">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-                {isActive ? (
-                  <item.activeIcon size="28px" />
-                ) : (
-                  <item.icon size="28px" />
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* --- Conditionally Render Mobile UI --- */}
+      {/* This entire block will NOT exist in the HTML on screens larger than 768px */}
+      {!isDesktop && (
+        <>
+          <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-800 z-50">
+            <div className="flex justify-around items-center h-16">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="relative flex-1 flex justify-center items-center h-full"
+                  >
+                    {item.text === "Notifications" && unreadCount > 0 && (
+                      <span className="absolute top-2 right-6 w-5 h-5 bg-blue-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-black">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                    {isActive ? (
+                      <item.activeIcon size="28px" />
+                    ) : (
+                      <item.icon size="28px" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
 
-      <div className="md:hidden fixed bottom-20 right-5 z-50">
-        <button className="p-4 bg-blue-500 rounded-full shadow-lg">
-          <RiQuillPenFill size="24px" className="text-white" />
-        </button>
-      </div>
+          <div className="fixed bottom-20 right-5 z-50">
+            <button className="p-4 bg-blue-500 rounded-full shadow-lg">
+              <RiQuillPenFill size="24px" className="text-white" />
+            </button>
+          </div>
+        </>
+      )}
 
       {isLogoutModalOpen && (
         <LogoutModal

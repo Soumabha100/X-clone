@@ -1,14 +1,12 @@
-// In frontend/src/hooks/useGetProfile.js
 import { useEffect } from "react";
 import axios from "axios";
-import { useDispatch, useSelector } from "react-redux"; // <-- Import useSelector
+import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 
-const API_BASE_URL = "https://x-clone-api-soumabha.onrender.com/api/v1";
+const API_BASE_URL = "/api/v1";
 
 const useGetProfile = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((store) => store.user); // <-- Get user from Redux store
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -16,18 +14,21 @@ const useGetProfile = () => {
         const res = await axios.get(`${API_BASE_URL}/user/me`, {
           withCredentials: true,
         });
+        // If the cookie is valid, the server returns the user.
+        // We dispatch this user to the Redux store.
         dispatch(setUser(res.data.user));
       } catch (error) {
+        // If the cookie is invalid or expired, the API call will fail.
+        // We dispatch `null` to confirm the user is not logged in.
         dispatch(setUser(null));
         console.error("Could not fetch user profile:", error);
       }
     };
 
-    // THE FIX: Only run the fetch function if there is no user in the Redux state.
-    if (!user) {
-      fetchUser();
-    }
-  }, [dispatch, user]); // <-- Add user to the dependency array
+    // We run this check once when the app loads.
+    fetchUser();
+    
+  }, [dispatch]); // The effect runs only once on mount.
 };
 
 export default useGetProfile;

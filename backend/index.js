@@ -7,9 +7,10 @@ import tweetRoute from "./routes/tweetRoute.js";
 import notificationRoute from "./routes/notificationRoute.js";
 import cors from "cors";
 import path from "path";
-import helmet from "helmet"; 
-import morgan from "morgan"; 
+import helmet from "helmet";
+import morgan from "morgan";
 
+// Make sure dotenv is configured at the very top
 dotenv.config();
 databaseConnection();
 
@@ -18,17 +19,50 @@ const app = express();
 const __dirname = path.resolve();
 
 // Middlewares
-app.use(helmet()); // Helmet for security
-app.use(morgan("dev")); // Morgan for logging
+app.use(helmet());
+app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
+// --- START: PERMANENT & ROBUST CORS CONFIGURATION ---
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN,
+  origin: (origin, callback) => {
+    // For debugging: log the origin of the incoming request
+    console.log(`Incoming request from origin: ${origin}`);
+    console.log(`Node environment is: ${process.env.NODE_ENV}`);
+
+    // Define the list of allowed origins
+    const whitelist = [
+      process.env.CORS_ORIGIN, // Your Vercel URL from .env
+    ];
+
+    // During development, add local URLs to the whitelist
+    if (process.env.NODE_ENV === "development") {
+      whitelist.push("http://localhost:5173", "http://127.0.0.1:5173");
+      // Add a regex to allow any local network IP
+      whitelist.push(/^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:5173$/);
+    }
+
+    // Check if the origin is in the whitelist or if there's no origin (e.g., Postman)
+    // The .some() method will check both strings and the regex pattern.
+    if (
+      !origin ||
+      whitelist.some((url) =>
+        typeof url === "string" ? url === origin : url.test(origin)
+      )
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("This origin is not allowed by CORS"));
+    }
+  },
   credentials: true,
 };
+
 app.use(cors(corsOptions));
+// --- END: PERMANENT & ROBUST CORS CONFIGURATION ---
 
 // API Routes
 app.use("/api/v1/user", userRoute);

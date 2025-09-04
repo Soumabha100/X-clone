@@ -28,7 +28,7 @@ const Home = () => {
     
     return (
         // This is the simplified flex container for the whole page layout.
-        <div className="flex justify-center w-full max-w-6xl mx-auto">
+        <div className="flex justify-center w-full sm:max-w-6xl sm:mx-auto">
             <Sidebar />
             <Outlet />
             <Widgets />

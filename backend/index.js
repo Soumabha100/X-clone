@@ -11,18 +11,21 @@ import helmet from "helmet";
 import morgan from "morgan";
 import errorHandler from "./middleware/errorHandler.js";
 
-// Load environment variables
 dotenv.config();
 databaseConnection();
 
 const app = express();
 const __dirname = path.resolve();
 
+// This line is crucial for production deployment on platforms like Render.
+// It tells Express to trust the 'x-forwarded-proto' header from the proxy.
+app.set("trust proxy", 1);
+
 // --- Middleware Setup (Correct Order) ---
-app.use(helmet()); // 1. Security headers first
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser()); // 2. Cookie parser right after body parsers
+app.use(cookieParser());
 app.use(morgan("dev"));
 
 // --- Production-Ready CORS Configuration ---
@@ -33,7 +36,6 @@ const corsOptions = {
       "http://localhost:5173",
       "http://127.0.0.1:5173",
     ];
-
     if (!origin || whitelist.includes(origin)) {
       callback(null, true);
     } else {
@@ -43,11 +45,10 @@ const corsOptions = {
   credentials: true,
 };
 
-// 3. Apply CORS ONLY to API routes, after cookies are parsed
+// Apply CORS ONLY to API routes
 app.use("/api/v1", cors(corsOptions));
 
 // --- API Routes ---
-// 4. API routes come after all general and CORS middleware
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
@@ -62,7 +63,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// --- Centralized Error Handler (Must be last) ---
+// --- Centralized Error Handler ---
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 10000;

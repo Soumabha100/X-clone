@@ -10,6 +10,9 @@ import path from "path";
 import helmet from "helmet";
 import morgan from "morgan";
 
+// Middleware
+import errorHandler from './middleware/errorHandler.js'
+
 // Make sure dotenv is configured at the very top
 dotenv.config();
 databaseConnection();
@@ -76,6 +79,9 @@ if (process.env.NODE_ENV === "production") {
     res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
   });
 }
+
+// Error Handling Middleware
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

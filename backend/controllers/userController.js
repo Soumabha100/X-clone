@@ -4,11 +4,12 @@ import { Notification } from "../models/notificationSchema.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import populateOptions from "../config/populateOptions.js";
+import { validationResult } from "express-validator";
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // Only true in production
-  sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+  secure: process.env.NODE_ENV === "production", // Only true in production
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
 };
 
 /**
@@ -34,6 +35,11 @@ export const getMe = async (req, res) => {
  * Handles new user registration.
  */
 export const Register = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { name, username, email, password } = req.body;
     if (!name || !username || !email || !password) {
@@ -64,11 +70,11 @@ export const Register = async (req, res) => {
     const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, {
       expiresIn: "1d",
     });
-    
+
     // Use the dynamic cookie options
     const finalCookieOptions = {
-        ...cookieOptions,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      ...cookieOptions,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
     };
 
     const userToReturn = newUser.toObject();
@@ -127,8 +133,8 @@ export const Login = async (req, res) => {
 
     // Use the dynamic cookie options
     const finalCookieOptions = {
-        ...cookieOptions,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+      ...cookieOptions,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
     };
 
     const userToReturn = user.toObject();
@@ -162,63 +168,66 @@ export const forgotPassword = async (req, res) => {
     }
 
     // Create a short-lived token for password reset
-    const resetToken = jwt.sign({ userId: user._id }, process.env.TOKEN_SECRET, {
-      expiresIn: "15m", // Token is valid for 15 minutes
-    });
+    const resetToken = jwt.sign(
+      { userId: user._id },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: "15m", // Token is valid for 15 minutes
+      }
+    );
 
     // **For development, we'll just log the token.**
     // In production, you would use a service like Nodemailer to send an email.
     console.log(`Password Reset Token for ${email}: ${resetToken}`);
-    
+
     // Send the token back in the response so you can test it
     res.status(200).json({
       message: "Password reset token generated. Check server logs.",
       resetToken: resetToken, // Sending it back for easy testing
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-
 /**
  * Handles the actual password reset.
  */
 export const resetPassword = async (req, res) => {
-    try {
-        const { token } = req.params;
-        const { password } = req.body;
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
 
-        if (!password) {
-            return res.status(400).json({ message: "New password is required." });
-        }
-
-        // Verify the token
-        const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
-        const userId = decoded.userId;
-
-        // Hash the new password with the FAST method
-        const hashedPassword = await bcryptjs.hash(password, 12);
-
-        // Update the user's password in the database
-        await User.findByIdAndUpdate(userId, { password: hashedPassword });
-
-        return res.status(200).json({
-            message: "Password has been successfully reset. Please log in.",
-            success: true,
-        });
-
-    } catch (error) {
-        console.log(error);
-        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: "Invalid or expired token." });
-        }
-        return res.status(500).json({ message: "Internal Server Error" });
+    if (!password) {
+      return res.status(400).json({ message: "New password is required." });
     }
-};
 
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    const userId = decoded.userId;
+
+    // Hash the new password with the FAST method
+    const hashedPassword = await bcryptjs.hash(password, 12);
+
+    // Update the user's password in the database
+    await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+    return res.status(200).json({
+      message: "Password has been successfully reset. Please log in.",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      return res.status(401).json({ message: "Invalid or expired token." });
+    }
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 /**
  * Logs out the user by clearing their authentication cookie.

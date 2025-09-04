@@ -1,66 +1,86 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Post from "./Post";
 import Tweet from "./Tweet";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
-import { setTweets } from "../redux/tweetSlice";
+import { setTweets, addTweets } from "../redux/tweetSlice"; // Import addTweets
 import TweetSkeleton from "./TweetSkeleton";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const API_BASE_URL = "/api/v1";
 
-/**
- * The Feed component is the main content area of the application.
- * It displays the tweet creation component and the main tweet timeline.
- */
 const Feed = () => {
-  // State to manage which tab ("For you" or "Following") is currently active.
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("For you");
-  // Get the logged-in user and the current list of tweets from the Redux store.
   const { user } = useSelector((store) => store.user);
   const { tweets } = useSelector((store) => store.tweet);
   const dispatch = useDispatch();
 
-  // This effect is responsible for fetching the correct set of tweets from the backend.
+  const fetchInitialTweets = useCallback(async () => {
+    if (!user?._id || loading) return;
+    setLoading(true);
+    setPage(1);
+    setHasMore(true);
+
+    try {
+      const endpoint =
+        activeTab === "For you" ? "public" : `alltweets/${user._id}`;
+      const res = await axios.get(
+        `${API_BASE_URL}/tweet/${endpoint}?page=1&limit=10`,
+        { withCredentials: true }
+      );
+
+      dispatch(setTweets(res.data.tweets));
+      setHasMore(res.data.currentPage < res.data.totalPages);
+    } catch (error) {
+      console.error("Failed to fetch tweets:", error);
+      dispatch(setTweets([])); // Clear tweets on error
+    } finally {
+      setLoading(false);
+    }
+  }, [user, activeTab, dispatch, loading]);
+
   useEffect(() => {
-    const fetchTweets = async () => {
-      // Guard clause: Don't attempt to fetch if there is no logged-in user.
-      if (!user?._id) return;
+    fetchInitialTweets();
+  }, [user, activeTab]); // Removed dispatch from dependency array for stability
 
-      try {
-        let res;
-        if (activeTab === "For you") {
-          // If the "For you" tab is active, fetch all public tweets from everyone.
-          res = await axios.get(`${API_BASE_URL}/tweet/public`, {
-            withCredentials: true,
-          });
-          // Dispatch the fetched tweets to the Redux store.
-          dispatch(setTweets(res.data));
-        } else {
-          // If the "Following" tab is active, fetch the personalized feed for the user.
-          res = await axios.get(`${API_BASE_URL}/tweet/alltweets/${user._id}`, {
-            withCredentials: true,
-          });
-          dispatch(setTweets(res.data.tweets));
-        }
-      } catch (error) {
-        console.error("Failed to fetch tweets:", error);
-        // In case of an error, clear the feed to avoid showing stale data.
-        dispatch(setTweets([]));
-      }
-    };
+  const fetchMoreTweets = async () => {
+    if (!user?._id || loading) return;
+    setLoading(true);
+    const nextPage = page + 1;
 
-    fetchTweets();
-    // This effect will re-run whenever the logged-in user, active tab, or dispatch function changes.
-  }, [user, activeTab, dispatch]);
+    try {
+      const endpoint =
+        activeTab === "For you" ? "public" : `alltweets/${user._id}`;
+      const res = await axios.get(
+        `${API_BASE_URL}/tweet/${endpoint}?page=${nextPage}&limit=10`,
+        { withCredentials: true }
+      );
+
+      // Use the new addTweets action to append data
+      dispatch(addTweets(res.data.tweets));
+      setPage(nextPage);
+      setHasMore(res.data.currentPage < res.data.totalPages);
+    } catch (error) {
+      console.error("Failed to fetch more tweets:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabClick = (tab) => {
+    dispatch(setTweets(null)); // Clear tweets immediately for a better UX
+    setActiveTab(tab);
+  };
 
   return (
     <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
-      {/* --- Sticky Header with Navigation Tabs --- */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
         <div className="flex items-center justify-between border-b border-neutral-700">
-          {/* "For you" Tab */}
           <div
-            onClick={() => setActiveTab("For you")}
+            onClick={() => handleTabClick("For you")}
             className="w-full text-center cursor-pointer hover:bg-neutral-900"
           >
             <h1
@@ -74,9 +94,8 @@ const Feed = () => {
               )}
             </h1>
           </div>
-          {/* "Following" Tab */}
           <div
-            onClick={() => setActiveTab("Following")}
+            onClick={() => handleTabClick("Following")}
             className="w-full text-center cursor-pointer hover:bg-neutral-900"
           >
             <h1
@@ -92,21 +111,31 @@ const Feed = () => {
           </div>
         </div>
       </div>
-
-      {/* Renders the component for creating a new tweet. */}
       <Post />
 
-      {/* --- SKELETON LOADER LOGIC --- */}
+      {/* --- Infinite Scroll Implementation --- */}
       {!tweets ? (
-        // If tweets are null (loading for the first time), show 3 skeletons.
         <div>
           <TweetSkeleton />
           <TweetSkeleton />
           <TweetSkeleton />
         </div>
       ) : (
-        // Otherwise, map over and display the actual tweets.
-        tweets.map((tweet) => <Tweet key={tweet._id} tweet={tweet} />)
+        <InfiniteScroll
+          dataLength={tweets.length}
+          next={fetchMoreTweets}
+          hasMore={hasMore}
+          loader={<TweetSkeleton />}
+          endMessage={
+            <p className="text-center text-neutral-500 py-4">
+              <b>You have seen it all!</b>
+            </p>
+          }
+        >
+          {tweets.map((tweet) => (
+            <Tweet key={tweet._id} tweet={tweet} />
+          ))}
+        </InfiniteScroll>
       )}
     </div>
   );

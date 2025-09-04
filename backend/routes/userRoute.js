@@ -14,10 +14,11 @@ import {
   editProfile,
   deleteUser,
   getBookmarkedTweets,
-  forgotPassword, 
-  resetPassword, 
+  forgotPassword,
+  resetPassword,
 } from "../controllers/userController.js";
 import isAuthenticated from "../config/auth.js";
+import { body } from "express-validator";
 
 const router = express.Router();
 const upload = multer({ storage });
@@ -27,7 +28,19 @@ router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password/:token").post(resetPassword);
 
 // --- Public Routes ---
-router.route("/register").post(Register);
+router
+  .route("/register")
+  .post(
+    [
+      body("name", "Name is required").not().isEmpty(),
+      body("username", "Username is required").not().isEmpty(),
+      body("email", "Please include a valid email").isEmail(),
+      body("password", "Password must be 6 or more characters").isLength({
+        min: 6,
+      }),
+    ],
+    Register
+  );
 router.route("/login").post(Login);
 router.route("/logout").get(logout);
 

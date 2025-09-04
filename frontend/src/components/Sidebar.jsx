@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -13,7 +13,8 @@ import { IoNotificationsOutline, IoNotifications } from "react-icons/io5";
 import { FaUser, FaRegUser } from "react-icons/fa";
 import { CiBookmark, CiLogout } from "react-icons/ci";
 import { RiQuillPenFill } from "react-icons/ri";
-import useWindowSize from "../hooks/useWindowSize"; // <-- IMPORT THE HOOK
+import { FiMoreHorizontal } from "react-icons/fi";
+import useWindowSize from "../hooks/useWindowSize";
 
 const API_BASE_URL = "/api/v1";
 
@@ -23,10 +24,24 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
-  // --- IMPLEMENT THE HOOK ---
   const width = useWindowSize();
-  const isDesktop = width >= 768; // 768px is Tailwind's 'md' breakpoint
+  const isDesktop = width >= 768;
+
+  // Effect to close the menu if clicking outside of it
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMoreMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
 
   const navItems = [
     { path: "/home", icon: GoHome, activeIcon: GoHomeFill, text: "Home" },
@@ -83,8 +98,7 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* --- Conditionally Render Desktop Sidebar --- */}
-      {/* This entire block will NOT exist in the HTML on screens smaller than 768px */}
+      {/* --- DESKTOP SIDEBAR --- */}
       {isDesktop && (
         <div className="md:w-[20%] sticky top-0 h-screen pr-4">
           <div className="ml-5 mt-3">
@@ -137,11 +151,38 @@ const Sidebar = () => {
         </div>
       )}
 
-      {/* --- Conditionally Render Mobile UI --- */}
-      {/* This entire block will NOT exist in the HTML on screens larger than 768px */}
+      {/* --- MOBILE UI --- */}
       {!isDesktop && (
         <>
-          <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-800 z-50">
+          {/* POP-UP "MORE" MENU */}
+          {isMoreMenuOpen && (
+            <div
+              ref={menuRef}
+              className="absolute bottom-20 right-5 z-50 bg-black rounded-xl shadow-lg border border-neutral-800 animate-pop-in w-60"
+            >
+              <Link
+                to="/home/bookmarks"
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="flex items-center gap-4 px-4 py-3 text-white hover:bg-neutral-900 rounded-t-xl"
+              >
+                <CiBookmark size="24px" />
+                <span className="font-bold">Bookmarks</span>
+              </Link>
+              <div
+                onClick={() => {
+                  setIsMoreMenuOpen(false);
+                  setIsLogoutModalOpen(true);
+                }}
+                className="flex items-center gap-4 px-4 py-3 text-red-500 cursor-pointer hover:bg-neutral-900 rounded-b-xl"
+              >
+                <CiLogout size="24px" />
+                <span className="font-bold">Logout</span>
+              </div>
+            </div>
+          )}
+
+          {/* BOTTOM NAVIGATION BAR */}
+          <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-800 z-40">
             <div className="flex justify-around items-center h-16">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
@@ -164,10 +205,18 @@ const Sidebar = () => {
                   </Link>
                 );
               })}
+              {/* "MORE" BUTTON TO OPEN THE MENU */}
+              <div
+                onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                className="relative flex-1 flex justify-center items-center h-full cursor-pointer"
+              >
+                <FiMoreHorizontal size="28px" />
+              </div>
             </div>
           </div>
 
-          <div className="fixed bottom-20 right-5 z-50">
+          {/* FLOATING ACTION BUTTON (POST) */}
+          <div className="fixed bottom-20 right-5 z-40">
             <button className="p-4 bg-blue-500 rounded-full shadow-lg">
               <RiQuillPenFill size="24px" className="text-white" />
             </button>

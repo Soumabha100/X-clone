@@ -12,6 +12,15 @@ import morgan from "morgan";
 import errorHandler from "./middleware/errorHandler.js";
 
 dotenv.config();
+// ***** START OF DEBUGGING BLOCK *****
+// Add these lines to see what values your Render environment is actually using.
+console.log("--- Verifying Cloudinary Environment Variables ---");
+console.log("CLOUD_NAME:", process.env.CLOUD_NAME ? "Loaded Successfully" : "ERROR: NOT LOADED");
+console.log("API_KEY:", process.env.API_KEY ? "Loaded Successfully" : "ERROR: NOT LOADED");
+// For security, we'll only log if the secret exists, not its value.
+console.log("API_SECRET:", process.env.API_SECRET ? "Loaded Successfully" : "ERROR: NOT LOADED");
+console.log("---------------------------------------------");
+// ***** END OF DEBUGGING BLOCK *****
 databaseConnection();
 
 const app = express();

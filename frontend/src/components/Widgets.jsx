@@ -55,7 +55,10 @@ const Widgets = () => {
               key={user._id}
               className="flex items-center justify-between mt-4"
             >
-              <div className="flex items-center">
+              <Link
+                to={`/home/profile/${user._id}`}
+                className="flex items-center"
+              >
                 <div className="mr-2">
                   <Avatar
                     src={user.profileImg}
@@ -65,10 +68,12 @@ const Widgets = () => {
                   />
                 </div>
                 <div>
-                  <h1 className="font-bold text-sm">{user.name}</h1>
+                  <h1 className="font-bold text-sm hover:underline">
+                    {user.name}
+                  </h1>
                   <p className="text-sm text-neutral-500">@{user.username}</p>
                 </div>
-              </div>
+              </Link>
               <div>
                 <Link to={`/home/profile/${user._id}`}>
                   <button className="px-4 py-1.5 bg-white text-black rounded-full font-bold text-sm hover:bg-gray-200 transition-colors">

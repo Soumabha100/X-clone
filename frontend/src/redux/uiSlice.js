@@ -11,6 +11,7 @@ const uiSlice = createSlice({
   initialState: {
     isLoading: false, // A boolean to control the visibility of the loading overlay.
     loadingMessage: "", // The dynamic message to display on the loading overlay.
+    isCreatePostModalOpen: false,
   },
   // Reducers are functions that define how the state can be updated.
   reducers: {
@@ -24,9 +25,16 @@ const uiSlice = createSlice({
       state.loadingMessage = action.payload.message || "";
     },
   },
+  openCreatePostModal: (state) => {
+    state.isCreatePostModalOpen = true;
+  },
+  closeCreatePostModal: (state) => {
+    state.isCreatePostModalOpen = false;
+  },
 });
 
 // Export the action creator to be used in components (e.g., dispatch(setLoading(...))).
-export const { setLoading } = uiSlice.actions;
+export const { setLoading, openCreatePostModal, closeCreatePostModal } =
+  uiSlice.actions;
 // Export the reducer to be included in the main Redux store configuration.
 export default uiSlice.reducer;

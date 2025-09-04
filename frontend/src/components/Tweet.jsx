@@ -18,11 +18,13 @@ import { removeTweet, updateTweet } from "../redux/tweetSlice";
 import EditTweetModal from "./EditTweetModal";
 import CommentModal from "./CommentModal";
 import { setUser } from "../redux/userSlice";
+import DeleteTweetModal from "./DeleteTweetModal";
 
 const API_BASE_URL = "/api/v1";
 
 const Tweet = memo(({ tweet }) => {
   // --- All hooks are defined at the top-level, before any conditions or returns ---
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -49,6 +51,7 @@ const Tweet = memo(({ tweet }) => {
   }, [dispatch, tweetId, loggedInUser?._id]);
 
   const deleteTweetHandler = useCallback(async () => {
+    setIsDeleteModalOpen(false);
     if (!tweetId) return;
     if (window.confirm("Are you sure you want to delete this tweet?")) {
       try {
@@ -198,7 +201,7 @@ const Tweet = memo(({ tweet }) => {
                         onClick={(e) => {
                           e.preventDefault();
                           setIsOptionsOpen(false);
-                          deleteTweetHandler();
+                          setIsDeleteModalOpen(true);
                         }}
                         className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-neutral-900 rounded-b-xl"
                       >
@@ -309,6 +312,12 @@ const Tweet = memo(({ tweet }) => {
         <CommentModal
           tweet={tweet}
           onClose={() => setIsCommentModalOpen(false)}
+        />
+      )}
+      {isDeleteModalOpen && (
+        <DeleteTweetModal
+          onConfirm={deleteTweetHandler}
+          onCancel={() => setIsDeleteModalOpen(false)}
         />
       )}
     </>

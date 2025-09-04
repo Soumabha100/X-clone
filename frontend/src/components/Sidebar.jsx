@@ -15,6 +15,7 @@ import { CiBookmark, CiLogout } from "react-icons/ci";
 import { RiQuillPenFill } from "react-icons/ri";
 import { FiMoreHorizontal } from "react-icons/fi";
 import useWindowSize from "../hooks/useWindowSize";
+import { openCreatePostModal } from "../redux/uiSlice";
 
 const API_BASE_URL = "/api/v1";
 
@@ -29,6 +30,10 @@ const Sidebar = () => {
 
   const width = useWindowSize();
   const isDesktop = width >= 768;
+
+  const handlePostClick = () => {
+    dispatch(openCreatePostModal());
+  };
 
   // Effect to close the menu if clicking outside of it
   useEffect(() => {
@@ -144,7 +149,10 @@ const Sidebar = () => {
               <CiLogout size="28px" />
               <h1 className="font-bold text-lg">Logout</h1>
             </div>
-            <button className="w-full mt-4 py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600">
+            <button
+              onClick={handlePostClick}
+              className="w-full mt-4 py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600"
+            >
               Post
             </button>
           </div>
@@ -216,7 +224,10 @@ const Sidebar = () => {
           </div>
 
           {/* FLOATING ACTION BUTTON (POST) */}
-          <div className="fixed bottom-20 right-5 z-40">
+          <div
+            onClick={handlePostClick}
+            className="fixed bottom-20 right-5 z-40"
+          >
             <button className="p-4 bg-blue-500 rounded-full shadow-lg">
               <RiQuillPenFill size="24px" className="text-white" />
             </button>

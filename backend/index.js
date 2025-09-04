@@ -34,18 +34,7 @@ const whitelist = [
 ];
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Log the incoming origin for debugging purposes
-    console.log("CORS Check: Request from origin:", origin);
-
-    if (!origin || whitelist.includes(origin)) {
-      console.log("CORS Check: Origin allowed.");
-      callback(null, true);
-    } else {
-      console.error("CORS Check: Origin blocked.");
-      callback(new Error("This origin is not allowed by CORS"));
-    }
-  },
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   credentials: true,
 };
 

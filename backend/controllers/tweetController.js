@@ -3,19 +3,14 @@ import { Notification } from "../models/notificationSchema.js";
 import { User } from "../models/userSchema.js";
 import populateOptions from "../config/populateOptions.js";
 
-// A helper object for Mongoose's .populate() method.
-
 // UPDATED createTweet function to handle both image and text-only posts correctly
 export const createTweet = async (req, res) => {
   try {
     const { description } = req.body;
-    // THIS IS THE FIX: Get the user ID from the secure session, not the request body.
     const id = req.user;
 
-    // The image URL from Cloudinary is provided by multer in req.file.path.
     const imageUrl = req.file ? req.file.path : "";
 
-    // A tweet must have a description.
     if (!description) {
       return res.status(401).json({
         message: "Description is required.",
@@ -26,7 +21,7 @@ export const createTweet = async (req, res) => {
     const newTweet = await Tweet.create({
       description,
       userId: id,
-      image: imageUrl, // Save the Cloudinary URL.
+      image: imageUrl,
     });
 
     const populatedTweet = await Tweet.findById(newTweet._id).populate(
@@ -49,8 +44,8 @@ export const createTweet = async (req, res) => {
  */
 export const deleteTweet = async (req, res) => {
   try {
-    const { id } = req.params; // The ID of the tweet to delete.
-    const loggedInUserId = req.user; // The ID of the user making the request.
+    const { id } = req.params;
+    const loggedInUserId = req.user;
 
     const tweet = await Tweet.findById(id);
     if (!tweet) {
@@ -60,7 +55,6 @@ export const deleteTweet = async (req, res) => {
       });
     }
 
-    // Security check: Verify that the logged-in user is the tweet's author.
     if (tweet.userId.toString() !== loggedInUserId.toString()) {
       return res.status(403).json({
         message: "You are not authorized to delete this tweet.",
@@ -68,7 +62,6 @@ export const deleteTweet = async (req, res) => {
       });
     }
 
-    // If the check passes, delete the tweet.
     await Tweet.findByIdAndDelete(id);
     return res.status(200).json({
       message: "Tweet deleted successfully.",
@@ -96,7 +89,6 @@ export const likeOrDislike = async (req, res) => {
     }
 
     if (tweet.like.includes(loggedInUserId)) {
-      // If already liked, dislike (remove the user's ID from the 'like' array).
       await Tweet.findByIdAndUpdate(tweetId, {
         $pull: { like: loggedInUserId },
       });
@@ -108,12 +100,10 @@ export const likeOrDislike = async (req, res) => {
         tweet: updatedTweet,
       });
     } else {
-      // If not liked, like (add the user's ID to the 'like' array).
       await Tweet.findByIdAndUpdate(tweetId, {
         $push: { like: loggedInUserId },
       });
 
-      // Create a notification for the tweet's author, but only if it's not their own tweet.
       if (loggedInUserId.toString() !== tweet.userId.toString()) {
         await Notification.create({
           type: "like",
@@ -150,9 +140,7 @@ export const retweet = async (req, res) => {
       return res.status(404).json({ message: "Tweet not found." });
     }
 
-    // Check if the user has already retweeted this tweet
     if (tweet.retweetedBy.includes(loggedInUserId)) {
-      // If so, un-retweet it
       await Tweet.findByIdAndUpdate(tweetId, {
         $pull: { retweetedBy: loggedInUserId },
       });
@@ -164,14 +152,9 @@ export const retweet = async (req, res) => {
         tweet: updatedTweet,
       });
     } else {
-      // If not, retweet it
       await Tweet.findByIdAndUpdate(tweetId, {
         $push: { retweetedBy: loggedInUserId },
       });
-
-      // (Optional) You could add a notification here for retweets as well
-      // await Notification.create({ ... });
-
       const updatedTweet = await Tweet.findById(tweetId).populate(
         populateOptions
       );
@@ -204,9 +187,7 @@ export const getAllTweets = async (req, res) => {
 
     const feedTweets = await Tweet.find({
       $or: [
-        // Condition 1: Tweets created by people the user follows.
         { userId: { $in: loggedInUser.following } },
-        // Condition 2: Tweets retweeted by the user OR people they follow.
         { retweetedBy: { $in: [...loggedInUser.following, loggedInUser._id] } },
       ],
     })
@@ -313,7 +294,6 @@ export const editTweet = async (req, res) => {
     if (!tweet) {
       return res.status(404).json({ message: "Tweet not found." });
     }
-    // Security check: Verify ownership.
     if (tweet.userId.toString() !== loggedInUserId.toString()) {
       return res
         .status(403)
@@ -322,11 +302,9 @@ export const editTweet = async (req, res) => {
     if (!description || description.trim() === "") {
       return res.status(400).json({ message: "Description cannot be empty." });
     }
-    // Update the description and mark the tweet as edited.
     tweet.description = description;
     tweet.isEdited = true;
     await tweet.save();
-    // Return the fully populated, updated tweet.
     const updatedTweet = await Tweet.findById(tweetId).populate(
       populateOptions
     );
@@ -360,11 +338,9 @@ export const createComment = async (req, res) => {
     if (!tweet) {
       return res.status(404).json({ message: "Tweet not found." });
     }
-    // Add the new comment to the tweet's 'comments' array.
     tweet.comments.push(newComment);
     await tweet.save();
 
-    // Create a notification for the tweet's author, unless they are commenting on their own tweet.
     if (loggedInUserId.toString() !== tweet.userId.toString()) {
       await Notification.create({
         type: "comment",
@@ -374,7 +350,6 @@ export const createComment = async (req, res) => {
       });
     }
 
-    // Return the fully populated, updated tweet.
     const updatedTweet = await Tweet.findById(tweetId).populate(
       populateOptions
     );

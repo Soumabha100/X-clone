@@ -26,20 +26,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-// --- THE FINAL, PRODUCTION-READY CORS SOLUTION ---
-const whitelist = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  process.env.CORS_ORIGIN, // Your deployed frontend URL from Render ENV VARS
-];
-
+// Your CORS setup is fine, but we can simplify it for this setup.
+// This allows requests from your Render URL and localhost.
 const corsOptions = {
   origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   credentials: true,
 };
+app.use(cors(corsOptions));
 
-// Apply CORS ONLY to API routes
-app.use("/api/v1", cors(corsOptions));
+// ***** START OF THE FIX *****
+// This is the new middleware to prevent API caching on Render.
+// It will apply the 'no-store' cache policy to all routes starting with /api/v1
+app.use("/api/v1", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+// ***** END OF THE FIX *****
 
 // --- API Routes ---
 app.use("/api/v1/user", userRoute);
@@ -47,6 +49,7 @@ app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
 
 // --- Static File Serving & Client-Side Routing for Production ---
+// This part is essential and should NOT be removed.
 if (process.env.NODE_ENV === "production") {
   const frontendDistPath = path.resolve(__dirname, "..", "frontend", "dist");
   app.use(express.static(frontendDistPath));

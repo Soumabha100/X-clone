@@ -2,7 +2,6 @@ import { Tweet } from "../models/tweetSchema.js";
 import { Notification } from "../models/notificationSchema.js";
 import { User } from "../models/userSchema.js";
 import populateOptions from "../config/populateOptions.js";
-import asyncHandler from "express-async-handler";
 
 // A helper object for Mongoose's .populate() method.
 
@@ -48,27 +47,41 @@ export const createTweet = async (req, res) => {
 /**
  * Deletes a tweet, ensuring only the original author can do so.
  */
-export const deleteTweet = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const loggedInUserId = req.user;
+export const deleteTweet = async (req, res) => {
+  try {
+    const { id } = req.params; // The ID of the tweet to delete.
+    const loggedInUserId = req.user; // The ID of the user making the request.
 
-  const tweet = await Tweet.findById(id);
-  if (!tweet) {
-    res.status(404);
-    throw new Error("Tweet not found."); // This error will be caught by the handler
+    const tweet = await Tweet.findById(id);
+    if (!tweet) {
+      return res.status(404).json({
+        message: "Tweet not found.",
+        success: false,
+      });
+    }
+
+    // Security check: Verify that the logged-in user is the tweet's author.
+    if (tweet.userId.toString() !== loggedInUserId.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this tweet.",
+        success: false,
+      });
+    }
+
+    // If the check passes, delete the tweet.
+    await Tweet.findByIdAndDelete(id);
+    return res.status(200).json({
+      message: "Tweet deleted successfully.",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: "An error occurred.",
+      success: false,
+    });
   }
-
-  if (tweet.userId.toString() !== loggedInUserId.toString()) {
-    res.status(403);
-    throw new Error("You are not authorized to delete this tweet.");
-  }
-
-  await Tweet.findByIdAndDelete(id);
-  res.status(200).json({
-    message: "Tweet deleted successfully.",
-    success: true,
-  });
-});
+};
 
 /**
  * Toggles the "like" status of a tweet for the logged-in user.
@@ -185,15 +198,16 @@ export const getAllTweets = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    const followingIds = loggedInUser.following;
-    const selfId = loggedInUser._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
     const feedTweets = await Tweet.find({
       $or: [
         // Condition 1: Tweets created by people the user follows.
-        { userId: { $in: followingIds } },
+        { userId: { $in: loggedInUser.following } },
         // Condition 2: Tweets retweeted by the user OR people they follow.
-        { retweetedBy: { $in: [...followingIds, selfId] } },
+        { retweetedBy: { $in: [...loggedInUser.following, loggedInUser._id] } },
       ],
     })
       .populate(populateOptions)
@@ -201,7 +215,6 @@ export const getAllTweets = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Also get total count for frontend to know if there are more pages
     const totalTweets = await Tweet.countDocuments({
       $or: [
         { userId: { $in: loggedInUser.following } },
@@ -232,13 +245,14 @@ export const getFollowingTweets = async (req, res) => {
       userId: { $in: loggedInUser.following },
     })
       .populate(populateOptions)
-      .sort({ createdAt: -1 }); // Sort in the database
+      .sort({ createdAt: -1 });
 
     return res.status(200).json({
       tweets: allFollowingTweets,
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -263,22 +277,21 @@ export const getUserTweets = async (req, res) => {
  */
 export const getPublicTweets = async (req, res) => {
   try {
+    // FIX: Added the missing pagination variable definitions
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const allPublicTweets = await Tweet.find()
       .populate(populateOptions)
-      .sort({ updatedAt: -1 }) // Sort by updatedAt for consistency with retweets
+      .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    // Also get total count for frontend to know if there are more pages
-    const totalTweets = await Tweet.countDocuments({
-      $or: [
-        { userId: { $in: loggedInUser.following } },
-        { retweetedBy: { $in: [...loggedInUser.following, loggedInUser._id] } },
-      ],
-    });
+    const totalTweets = await Tweet.countDocuments();
 
     return res.status(200).json({
-      tweets: feedTweets,
+      tweets: allPublicTweets,
       totalPages: Math.ceil(totalTweets / limit),
       currentPage: page,
     });

@@ -7,19 +7,19 @@ import tweetRoute from "./routes/tweetRoute.js";
 import notificationRoute from "./routes/notificationRoute.js";
 import cors from "cors";
 import path from "path";
+import helmet from "helmet"; 
+import morgan from "morgan"; 
 
-// Load environment variables
 dotenv.config();
-
-// Establish the connection to the MongoDB database.
 databaseConnection();
 
 const app = express();
 
-// --- Define __dirname for ES Modules ---
 const __dirname = path.resolve();
 
 // Middlewares
+app.use(helmet()); // Helmet for security
+app.use(morgan("dev")); // Morgan for logging
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
@@ -30,12 +30,12 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// --- API Routes ---
+// API Routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
 
-// --- Static Files Middleware for Production ---
+// This code is for deployment on Render
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "frontend/dist")));
   app.get("*", (req, res) => {
@@ -43,9 +43,7 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-// Start the server
 const PORT = process.env.PORT || 8000;
-// FIX: Added '0.0.0.0' to accept requests from the local network
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`Server listening at port ${PORT}`);
 });

@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      // Proxy API requests to the backend server during development
+      // This proxies any request starting with /api to your backend server
       '/api': {
-        target: 'http://localhost:8000', // Your backend's local address
+        target: 'http://localhost:8000', // Your local backend server address
         changeOrigin: true,
       },
     },

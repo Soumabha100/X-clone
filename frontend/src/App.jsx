@@ -1,15 +1,16 @@
-import React from 'react';
-import Home from './components/Home.jsx';
-import Feed from './components/Feed.jsx';
-import Widgets from './components/Widgets.jsx';
-import Body from './components/Body.jsx';
+import React from "react";
+import Body from "./components/Body.jsx";
+import useGetProfile from "./hooks/useGetProfile.js";
 
-function App () {
+function App() {
+  // Fetch the user profile at the highest level of the app.
+  useGetProfile();
+
   return (
-    <div className='App'>
-      <Body/>
+    <div className="App">
+      <Body />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

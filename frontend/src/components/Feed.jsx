@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Post from "./Post";
 import Tweet from "./Tweet";
 import { useSelector, useDispatch } from "react-redux";
@@ -18,12 +18,14 @@ const Feed = () => {
   const { tweets } = useSelector((store) => store.tweet);
   const dispatch = useDispatch();
 
-  // FIX #1: Wrap the data fetching logic in useCallback.
-  // This memoizes the function, so it only gets recreated when its dependencies change.
-  const fetchInitialTweets = useCallback(async () => {
+  // THE FIX: Use a ref to track if this is the first render.
+  const isInitialMount = useRef(true);
+
+  // This function is now responsible for fetching tweets when a tab is clicked.
+  const fetchTabTweets = useCallback(async () => {
     if (!user?._id) return;
     try {
-      dispatch(setTweets(null)); // Immediately clear old tweets for better UX
+      dispatch(setTweets(null)); // Clear tweets for a clean loading state
       setPage(1);
       setHasMore(true);
       const endpoint =
@@ -36,15 +38,22 @@ const Feed = () => {
       dispatch(setTweets(res.data.tweets));
       setHasMore(res.data.currentPage < res.data.totalPages);
     } catch (error) {
-      console.error("Failed to fetch tweets:", error);
+      console.error("Failed to fetch tab tweets:", error);
       dispatch(setTweets([]));
     }
   }, [user, activeTab, dispatch]);
 
-  // FIX #2: Add the memoized function `fetchInitialTweets` to the dependency array.
+  // This useEffect now correctly handles the tab switching logic.
   useEffect(() => {
-    fetchInitialTweets();
-  }, [fetchInitialTweets]); // Now the dependency is correctly listed.
+    // On the very first render, do nothing. The Preloader has already loaded the initial data.
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // On subsequent renders (i.e., when activeTab changes), fetch the new tab's data.
+    fetchTabTweets();
+  }, [fetchTabTweets]); // The dependency is correct and will not cause a loop.
 
   const fetchMoreTweets = async () => {
     if (!user?._id) return;

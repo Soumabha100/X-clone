@@ -4,8 +4,9 @@ import Home from "./Home";
 import Login from "./Login";
 import LoadingOverlay from "./LoadingOverlay";
 import TweetSkeleton from "./TweetSkeleton";
-import ForgotPassword from "./ForgotPassword"; 
-import ResetPassword from "./ResetPassword"; 
+import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
+import Preloader from "./Preloader";
 
 // Lazy load the components
 const Feed = lazy(() => import("./Feed"));
@@ -24,7 +25,11 @@ const Body = () => {
     },
     {
       path: "/home",
-      element: <Home />,
+      element: (
+        <Preloader>
+          <Home />
+        </Preloader>
+      ),
       children: [
         {
           index: true,

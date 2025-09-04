@@ -17,28 +17,32 @@ databaseConnection();
 const app = express();
 const __dirname = path.resolve();
 
-// This line is crucial for production deployment on platforms like Render.
-// It tells Express to trust the 'x-forwarded-proto' header from the proxy.
 app.set("trust proxy", 1);
 
-// --- Middleware Setup (Correct Order) ---
+// --- Middleware Setup ---
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-// --- Production-Ready CORS Configuration ---
+// --- THE FINAL, PRODUCTION-READY CORS SOLUTION ---
+const whitelist = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  process.env.CORS_ORIGIN, // Your deployed frontend URL from Render ENV VARS
+];
+
 const corsOptions = {
   origin: (origin, callback) => {
-    const whitelist = [
-      process.env.CORS_ORIGIN,
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-    ];
+    // Log the incoming origin for debugging purposes
+    console.log("CORS Check: Request from origin:", origin);
+
     if (!origin || whitelist.includes(origin)) {
+      console.log("CORS Check: Origin allowed.");
       callback(null, true);
     } else {
+      console.error("CORS Check: Origin blocked.");
       callback(new Error("This origin is not allowed by CORS"));
     }
   },

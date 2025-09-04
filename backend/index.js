@@ -18,24 +18,22 @@ databaseConnection();
 const app = express();
 const __dirname = path.resolve();
 
-// --- General Middleware (applied to all requests) ---
-app.use(helmet()); // Sets important security headers
+// --- Middleware Setup (Correct Order) ---
+app.use(helmet()); // 1. Security headers first
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(morgan("dev")); // For logging HTTP requests
+app.use(cookieParser()); // 2. Cookie parser right after body parsers
+app.use(morgan("dev"));
 
 // --- Production-Ready CORS Configuration ---
 const corsOptions = {
   origin: (origin, callback) => {
-    // Define your whitelist
     const whitelist = [
-      process.env.CORS_ORIGIN, // Your deployed frontend URL from Render ENV VARS
+      process.env.CORS_ORIGIN,
       "http://localhost:5173",
       "http://127.0.0.1:5173",
     ];
 
-    // Check if the origin is in the whitelist or if it's not a browser request (e.g., Postman)
     if (!origin || whitelist.includes(origin)) {
       callback(null, true);
     } else {
@@ -45,12 +43,11 @@ const corsOptions = {
   credentials: true,
 };
 
-// --- THE FIX: Apply CORS ONLY to API routes ---
-// All routes starting with /api/v1 will use our CORS policy.
-// Static file requests (like for CSS and JS) will bypass this.
+// 3. Apply CORS ONLY to API routes, after cookies are parsed
 app.use("/api/v1", cors(corsOptions));
 
 // --- API Routes ---
+// 4. API routes come after all general and CORS middleware
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/tweet", tweetRoute);
 app.use("/api/v1/notifications", notificationRoute);
@@ -61,12 +58,11 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendDistPath));
 
   app.get("*", (req, res) => {
-    // For any route that isn't an API route, send the React app's entry point.
     res.sendFile(path.join(frontendDistPath, "index.html"));
   });
 }
 
-// --- Centralized Error Handler ---
+// --- Centralized Error Handler (Must be last) ---
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 10000;

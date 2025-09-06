@@ -6,21 +6,21 @@ import {
   deleteTweet,
   likeOrDislike,
   editTweet,
-  getFeedTweets, // <-- IMPORT THE NEW FUNCTION
+  getFeedTweets,
   getUserTweets,
   createComment,
   retweet,
   getTweetById,
 } from "../controllers/tweetController.js";
 import isAuthenticated from "../config/auth.js";
-import { body } from "express-validator"; // <-- IMPORT VALIDATOR
+import { body } from "express-validator";
 
 const router = express.Router();
 const upload = multer({ storage });
 
 // --- Tweet Routes ---
 
-// Create a new tweet (with validation)
+// [CREATE]
 router
   .route("/create")
   .post(
@@ -35,28 +35,21 @@ router
     createTweet
   );
 
-// Get tweets for the main feed ('For you' or 'Following')
+// [READ]
+// Specific text routes must come before dynamic routes with an ':id' parameter.
 router.route("/feed").get(isAuthenticated, getFeedTweets);
-
-// Get all tweets for a specific user's profile
 router.route("/user/:id").get(isAuthenticated, getUserTweets);
 
-// Get a single tweet by its ID
+// This dynamic route must be last to avoid catching text-based routes.
 router.route("/:id").get(isAuthenticated, getTweetById);
 
-// Delete a tweet
-router.route("/delete/:id").delete(isAuthenticated, deleteTweet);
-
-// Like or dislike a tweet
+// [UPDATE]
 router.route("/like/:id").put(isAuthenticated, likeOrDislike);
-
-// Edit a tweet
 router.route("/edit/:id").put(isAuthenticated, editTweet);
-
-// Add a comment to a tweet
+router.route("/retweet/:id").post(isAuthenticated, retweet);
 router.route("/comment/:id").post(isAuthenticated, createComment);
 
-// Retweet or un-retweet
-router.route("/retweet/:id").post(isAuthenticated, retweet);
+// [DELETE]
+router.route("/delete/:id").delete(isAuthenticated, deleteTweet);
 
 export default router;

@@ -1,5 +1,5 @@
 import express from "express";
-import multer from 'multer';
+import multer from "multer";
 import storage from "../config/cloudinary.js";
 import {
   Login,
@@ -29,7 +29,17 @@ router.route("/register").post(Register);
 
 // Route to handle user login.
 // POST /api/v1/user/login
-router.route("/login").post(Login);
+router
+  .route("/login")
+  .post(
+    [
+      body("identifier", "Please enter a valid email or username")
+        .not()
+        .isEmpty(),
+      body("password", "Password cannot be empty").not().isEmpty(),
+    ],
+    Login
+  );
 
 // Route to handle user logout.
 // GET /api/v1/user/logout
@@ -76,8 +86,6 @@ router.route("/profile/edit").post(
 
 // Delete Route
 router.route("/delete/:id").delete(isAuthenticated, deleteUser);
-
-
 
 // Export the router to be used in the main server file (index.js).
 export default router;

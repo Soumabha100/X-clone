@@ -3,36 +3,32 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUser } from "../redux/userSlice";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = "/api/v1";
 
-/**
- * A custom React hook responsible for fetching the logged-in user's profile
- * when a component mounts. This is the key to persisting the user session
- * across page refreshes.
- */
 const useGetProfile = () => {
   const dispatch = useDispatch();
 
-  // The useEffect hook runs once when a component that uses this hook is mounted.
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Make an API call to the '/me' endpoint, sending the auth cookie.
         const res = await axios.get(`${API_BASE_URL}/user/me`, {
           withCredentials: true,
         });
-        // If the request is successful, dispatch the user data to the Redux store.
-        // This repopulates the user state for the application.
+        // If the cookie is valid, the server returns the user.
+        // We dispatch this user to the Redux store.
         dispatch(setUser(res.data.user));
       } catch (error) {
-        // If the request fails (e.g., invalid or expired cookie),
-        // we dispatch null to the user state, ensuring the user is logged out.
+        // If the cookie is invalid or expired, the API call will fail.
+        // We dispatch `null` to confirm the user is not logged in.
         dispatch(setUser(null));
         console.error("Could not fetch user profile:", error);
       }
     };
+
+    // We run this check once when the app loads.
     fetchUser();
-  }, [dispatch]); // The dependency array ensures this effect runs only once on mount.
+    
+  }, [dispatch]); // The effect runs only once on mount.
 };
 
 export default useGetProfile;

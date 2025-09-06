@@ -13,7 +13,7 @@ import { format } from "timeago.js";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 //Test
 
@@ -64,7 +64,7 @@ const Notifications = () => {
 
   return (
     // This is the main container for the notifications feed ONLY.
-    <div className="w-full lg:w-[60%] border-l border-r border-neutral-800">
+    <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
         <div className="flex items-center justify-between p-4 border-b border-neutral-800">
           <h1 className="font-bold text-xl">Notifications</h1>

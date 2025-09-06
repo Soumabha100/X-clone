@@ -1,186 +1,248 @@
-import React, { useState, useEffect } from "react";
-import CreatePostModal from "./CreatePostModal";
-import { FaXTwitter } from "react-icons/fa6";
-import { GoHomeFill } from "react-icons/go";
-import { FaSearch } from "react-icons/fa";
-import { IoMdNotifications } from "react-icons/io";
-import { FaUser } from "react-icons/fa";
-import { FaHeart } from "react-icons/fa";
-import { RiLogoutBoxRLine } from "react-icons/ri";
-import { FaBookmark } from "react-icons/fa6";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
 import { clearUser } from "../redux/userSlice";
-import { setLoading } from "../redux/uiSlice";
 import LogoutModal from "./LogoutModal";
 import { setUnreadCount } from "../redux/notificationSlice";
+import { FaXTwitter } from "react-icons/fa6";
+import { GoHome, GoHomeFill } from "react-icons/go";
+import { IoSearchOutline, IoSearch } from "react-icons/io5";
+import { IoNotificationsOutline, IoNotifications } from "react-icons/io5";
+import { FaUser, FaRegUser } from "react-icons/fa";
+import { CiBookmark, CiLogout } from "react-icons/ci";
+import { RiQuillPenFill } from "react-icons/ri";
+import { FiMoreHorizontal } from "react-icons/fi";
+import useWindowSize from "../hooks/useWindowSize";
+import { openCreatePostModal } from "../redux/uiSlice";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
-/**
- * The Sidebar component provides the main navigation for the application.
- * It includes links to different sections, a logout button with a confirmation modal,
- * and a dynamic badge for unread notifications.
- */
 const Sidebar = () => {
-  // Get the logged-in user and unread notification count from the Redux store.
   const { user } = useSelector((store) => store.user);
   const { unreadCount } = useSelector((store) => store.notification);
-
-  const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  // State to manage the visibility of the logout confirmation modal.
+  const location = useLocation();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const width = useWindowSize();
+  const isDesktop = width >= 768;
 
-  // This effect runs on component mount and periodically fetches the unread
-  // notification count to keep the badge in the UI up-to-date.
+  const handlePostClick = () => {
+    dispatch(openCreatePostModal());
+  };
+
+  // Effect to close the menu if clicking outside of it
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMoreMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
+
+  const navItems = [
+    { path: "/home", icon: GoHome, activeIcon: GoHomeFill, text: "Home" },
+    {
+      path: "/home/explore",
+      icon: IoSearchOutline,
+      activeIcon: IoSearch,
+      text: "Explore",
+    },
+    {
+      path: "/home/notifications",
+      icon: IoNotificationsOutline,
+      activeIcon: IoNotifications,
+      text: "Notifications",
+    },
+    {
+      path: `/home/profile/${user?._id}`,
+      icon: FaRegUser,
+      activeIcon: FaUser,
+      text: "Profile",
+    },
+  ];
+
   useEffect(() => {
     const fetchUnreadCount = async () => {
-      // Only fetch if a user is logged in.
       if (user) {
         try {
           const res = await axios.get(
             `${API_BASE_URL}/notifications/unread-count`,
-            {
-              withCredentials: true,
-            }
+            { withCredentials: true }
           );
-          // Dispatch the fetched count to the Redux store.
           dispatch(setUnreadCount(res.data.count));
         } catch (error) {
-          // We don't show a user-facing error here as it's a background task.
-          console.error("Failed to fetch unread notification count:", error);
+          console.error("Failed to fetch unread count:", error);
         }
       }
     };
-
-    fetchUnreadCount(); // Fetch immediately when the component loads.
-    const intervalId = setInterval(fetchUnreadCount, 30000); // And then check again every 30 seconds.
-
-    // Cleanup function to stop the interval when the component unmounts.
+    fetchUnreadCount();
+    const intervalId = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(intervalId);
   }, [user, dispatch]);
 
-  /**
-   * Handles the complete logout process, including showing a loading state
-   * and redirecting the user.
-   */
   const logoutHandler = async () => {
-    setIsLogoutModalOpen(false); // Close the confirmation modal.
-    dispatch(setLoading({ status: true, message: "Logging you out..." }));
+    setIsLogoutModalOpen(false);
     try {
-      const res = await axios.get(`${API_BASE_URL}/user/logout`, {
-        withCredentials: true,
-      });
-      dispatch(clearUser()); // Clear user data from the Redux store.
-      toast.success(res.data.message);
-      // Use a timeout to allow the user to see the success message before redirecting.
-      setTimeout(() => {
-        navigate("/login");
-        dispatch(setLoading({ status: false }));
-      }, 1500);
+      await axios.get(`${API_BASE_URL}/user/logout`, { withCredentials: true });
+      dispatch(clearUser());
+      toast.success("Logged out successfully.");
+      window.location.href = "/login";
     } catch (error) {
       toast.error(error.response?.data?.message || "Logout failed.");
-      dispatch(setLoading({ status: false }));
     }
   };
 
   return (
     <>
-      <div className="w-[20%] sticky top-0 h-screen">
-        <div className="ml-5 mt-3">
-          <Link to="/home">
-            <FaXTwitter size={32} />
-          </Link>
-        </div>
-        <div className="mt-4">
-          {/* Navigation Links */}
-          <Link
-            to="/home"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <GoHomeFill size="28px" />
-            <h1 className="font-bold text-lg">Home</h1>
-          </Link>
-          <Link
-            to="/home/explore"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaSearch size="28px" />
-            <h1 className="font-bold text-lg">Explore</h1>
-          </Link>
-          <Link
-            to="/home/notifications"
-            className="relative flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            {/* The notification badge is only rendered if there are unread notifications. */}
-            {unreadCount > 0 && (
-              <span className="absolute top-2 left-5 w-5 h-5 bg-blue-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-black">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-            <IoMdNotifications size="28px" />
-            <h1 className="font-bold text-lg">Notifications</h1>
-          </Link>
-          {/* The profile link dynamically uses the logged-in user's ID. */}
-          <Link
-            to={`/home/profile/${user?._id}`}
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaUser size="28px" />
-            <h1 className="font-bold text-lg">Profile</h1>
-          </Link>
-          {/* --- BOOKMARKS --- */}
-          <Link
-            to="/home/bookmarks"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaBookmark size="28px" />
-            <h1 className="font-bold text-lg">Bookmarks</h1>
-          </Link>
-          <Link
-            to="/premium"
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <FaHeart size="28px" />
-            <h1 className="font-bold text-lg">Premium</h1>
-          </Link>
-          {/* This div opens the logout confirmation modal instead of logging out directly. */}
-          <div
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
-          >
-            <RiLogoutBoxRLine size="28px" />
-            <h1 className="font-bold text-lg">Logout</h1>
+      {/* --- DESKTOP SIDEBAR --- */}
+      {isDesktop && (
+        <div className="md:w-[20%] sticky top-0 h-screen pr-4">
+          <div className="ml-5 mt-3">
+            <Link to="/home">
+              <FaXTwitter size={32} />
+            </Link>
           </div>
           <div className="mt-4">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+                >
+                  {isActive ? (
+                    <item.activeIcon size="28px" />
+                  ) : (
+                    <item.icon size="28px" />
+                  )}
+                  <h1
+                    className={`font-bold text-lg ${
+                      isActive && "font-extrabold"
+                    }`}
+                  >
+                    {item.text}
+                  </h1>
+                </Link>
+              );
+            })}
+            <Link
+              to="/home/bookmarks"
+              className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+            >
+              <CiBookmark size="28px" />
+              <h1 className="font-bold text-lg">Bookmarks</h1>
+            </Link>
+            <div
+              onClick={() => setIsLogoutModalOpen(true)}
+              className="flex items-center space-x-4 p-3 my-2 cursor-pointer hover:bg-neutral-800 rounded-full"
+            >
+              <CiLogout size="28px" />
+              <h1 className="font-bold text-lg">Logout</h1>
+            </div>
             <button
-              onClick={() => setIsPostModalOpen(true)}
-              className="w-full py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600"
+              onClick={handlePostClick}
+              className="w-full mt-4 py-3 text-lg font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600"
             >
               Post
             </button>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* The LogoutModal is only rendered when isLogoutModalOpen is true. */}
+      {/* --- MOBILE UI --- */}
+      {!isDesktop && (
+        <>
+          {/* POP-UP "MORE" MENU */}
+          {isMoreMenuOpen && (
+            <div
+              ref={menuRef}
+              className="absolute bottom-20 right-5 z-50 bg-black rounded-xl shadow-lg border border-neutral-800 animate-pop-in w-60"
+            >
+              <Link
+                to="/home/bookmarks"
+                onClick={() => setIsMoreMenuOpen(false)}
+                className="flex items-center gap-4 px-4 py-3 text-white hover:bg-neutral-900 rounded-t-xl"
+              >
+                <CiBookmark size="24px" />
+                <span className="font-bold">Bookmarks</span>
+              </Link>
+              <div
+                onClick={() => {
+                  setIsMoreMenuOpen(false);
+                  setIsLogoutModalOpen(true);
+                }}
+                className="flex items-center gap-4 px-4 py-3 text-red-500 cursor-pointer hover:bg-neutral-900 rounded-b-xl"
+              >
+                <CiLogout size="24px" />
+                <span className="font-bold">Logout</span>
+              </div>
+            </div>
+          )}
+
+          {/* BOTTOM NAVIGATION BAR */}
+          <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-neutral-800 z-40">
+            <div className="flex justify-around items-center h-16">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="relative flex-1 flex justify-center items-center h-full"
+                  >
+                    {item.text === "Notifications" && unreadCount > 0 && (
+                      <span className="absolute top-2 right-6 w-5 h-5 bg-blue-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-black">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                    {isActive ? (
+                      <item.activeIcon size="28px" />
+                    ) : (
+                      <item.icon size="28px" />
+                    )}
+                  </Link>
+                );
+              })}
+              {/* "MORE" BUTTON TO OPEN THE MENU */}
+              <div
+                onClick={() => setIsMoreMenuOpen((prev) => !prev)}
+                className="relative flex-1 flex justify-center items-center h-full cursor-pointer"
+              >
+                <FiMoreHorizontal size="28px" />
+              </div>
+            </div>
+          </div>
+
+          {/* FLOATING ACTION BUTTON (POST) */}
+          <div
+            onClick={handlePostClick}
+            className="fixed bottom-20 right-5 z-40"
+          >
+            <button className="p-4 bg-blue-500 rounded-full shadow-lg">
+              <RiQuillPenFill size="24px" className="text-white" />
+            </button>
+          </div>
+        </>
+      )}
+
       {isLogoutModalOpen && (
         <LogoutModal
           onConfirm={logoutHandler}
           onCancel={() => setIsLogoutModalOpen(false)}
         />
       )}
-
-      {isPostModalOpen && (
-        <CreatePostModal onClose={() => setIsPostModalOpen(false)} />
-      )}
     </>
   );
 };
+
 export default Sidebar;

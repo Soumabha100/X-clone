@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { updateTweet } from "../redux/tweetSlice";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 /**
  * A modal component for editing the description of an existing tweet.

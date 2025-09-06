@@ -7,7 +7,7 @@ import Tweet from "./Tweet"; // We'll reuse our Tweet component!
 import TweetSkeleton from "./TweetSkeleton";
 import { IoMdArrowRoundBack } from "react-icons/io";
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const TweetPage = () => {
   const [tweet, setTweet] = useState(null);
@@ -28,7 +28,7 @@ const TweetPage = () => {
   }, [id]);
 
   return (
-    <div className="w-full lg:w-[60%] border-l border-r border-neutral-800">
+    <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
       {/* --- Header --- */}
       <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-md">
         <div className="flex items-center p-2 border-b border-neutral-800">

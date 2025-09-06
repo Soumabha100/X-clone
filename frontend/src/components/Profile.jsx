@@ -6,56 +6,69 @@ import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import Tweet from "./Tweet";
-import { setUser } from "../redux/userSlice";
-import EditProfileModal from "./EditProfileModal"; // Ensure this is imported
+import { setUser, setVisitedProfile } from "../redux/userSlice"; // Import the new action
+import EditProfileModal from "./EditProfileModal";
+import TweetSkeleton from "./TweetSkeleton"; // Import for smoother loading
 
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 const Profile = () => {
-  const [profile, setProfile] = useState(null);
-  const [userTweets, setUserTweets] = useState([]);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const { user: loggedInUser } = useSelector((store) => store.user);
   const { id: profileUserId } = useParams();
   const dispatch = useDispatch();
 
+  // --- THE FIX & OPTIMIZATION ---
+  // 1. Immediately get the profile from the Redux cache if it exists.
+  const profile = useSelector(
+    (store) => store.user.visitedProfiles[profileUserId]
+  );
+
+  const [userTweets, setUserTweets] = useState([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { user: loggedInUser } = useSelector((store) => store.user);
   const isFollowing = loggedInUser?.following.includes(profileUserId);
 
   const followUnfollowHandler = async () => {
     if (loggedInUser?._id === profileUserId) return;
-
     try {
       const endpoint = isFollowing ? "unfollow" : "follow";
       const res = await axios.post(
         `${API_BASE_URL}/user/${endpoint}/${profileUserId}`,
         { id: loggedInUser?._id },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
-      // THIS IS THE FIX: Dispatch the action to update the user's state.
       dispatch(setUser(res.data.user));
+      // Also update the cached profile with new follower data
+      dispatch(
+        setVisitedProfile({
+          profileId: profileUserId,
+          profileData: res.data.otherUser,
+        })
+      );
       toast.success(res.data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred.");
-      console.error("Follow/Unfollow error:", error);
     }
   };
 
   useEffect(() => {
     const fetchProfileAndTweets = async () => {
       try {
-        const profileRes = await axios.get(
-          `${API_BASE_URL}/user/profile/${profileUserId}`,
-          { withCredentials: true }
-        );
-        setProfile(profileRes.data.user);
+        // Fetch both profile and tweets simultaneously for speed
+        const [profileRes, tweetsRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/user/profile/${profileUserId}`, {
+            withCredentials: true,
+          }),
+          axios.get(`${API_BASE_URL}/tweet/user/${profileUserId}`, {
+            withCredentials: true,
+          }),
+        ]);
 
-        const tweetsRes = await axios.get(
-          `${API_BASE_URL}/tweet/user/${profileUserId}`,
-          { withCredentials: true }
+        // 2. Save the newly fetched profile to our Redux cache.
+        dispatch(
+          setVisitedProfile({
+            profileId: profileUserId,
+            profileData: profileRes.data.user,
+          })
         );
         setUserTweets(tweetsRes.data);
       } catch (error) {
@@ -63,20 +76,37 @@ const Profile = () => {
         console.error("Fetch profile error:", error);
       }
     };
-    fetchProfileAndTweets();
-  }, [profileUserId, loggedInUser]); // Updated dependency to loggedInUser for re-fetching on profile edits
 
+    // 3. Only fetch from the API if the profile isn't already in our cache.
+    if (!profile) {
+      fetchProfileAndTweets();
+    } else {
+      // If profile is cached, we might only need to refresh tweets
+      axios
+        .get(`${API_BASE_URL}/tweet/user/${profileUserId}`, {
+          withCredentials: true,
+        })
+        .then((res) => setUserTweets(res.data))
+        .catch((err) => console.error("Fetch tweets error:", err));
+    }
+  }, [profileUserId, dispatch, profile]);
+
+  // If the profile is not yet loaded, show a clean skeleton UI instead of nothing.
   if (!profile) {
     return (
-      <div className="w-[50%] text-center p-8">
-        <h1>Loading profile...</h1>
+      <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
+        <div className="p-4">
+          <TweetSkeleton />
+          <TweetSkeleton />
+          <TweetSkeleton />
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="w-full md:w-[50%] border-l border-r border-gray-800">
+      <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
         <div>
           <div className="flex items-center py-2 px-2">
             <Link
@@ -94,11 +124,15 @@ const Profile = () => {
           </div>
           <img
             src={
-              profile.bannerImg ||
-              "https://placehold.co/600x200/1DA1F2/FFFFFF?text=Banner"
+              profile.bannerImg
+                ? profile.bannerImg.replace(
+                    "/upload/",
+                    "/upload/w_600,f_auto,q_auto/"
+                  )
+                : "https://placehold.co/600x200/1DA1F2/FFFFFF?text=Banner"
             }
             alt="banner"
-            className="w-full h-48 object-cover"
+            className="w-full h-48 object-cover bg-neutral-800"
           />
           <div className="absolute top-52 ml-4">
             <Avatar

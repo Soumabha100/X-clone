@@ -4,16 +4,21 @@ import { Notification } from "../models/notificationSchema.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import populateOptions from "../config/populateOptions.js";
+import { validationResult } from "express-validator";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // Only true in production
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+};
 
 /**
  * Fetches the profile of the currently authenticated user.
- * Relies on the 'isAuthenticated' middleware to provide the user ID.
  */
 export const getMe = async (req, res) => {
   try {
-    // The user ID is securely attached to the request object by our middleware.
     const id = req.user;
-    const user = await User.findById(id).select("-password"); // Exclude the password for security.
+    const user = await User.findById(id).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -30,6 +35,11 @@ export const getMe = async (req, res) => {
  * Handles new user registration.
  */
 export const Register = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { name, username, email, password } = req.body;
     if (!name || !username || !email || !password) {
@@ -47,9 +57,8 @@ export const Register = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcryptjs.hash(password, 16);
+    const hashedPassword = await bcryptjs.hash(password, 12);
 
-    // Create the new user and get the created document back
     const newUser = await User.create({
       name,
       username,
@@ -57,30 +66,46 @@ export const Register = async (req, res) => {
       password: hashedPassword,
     });
 
-    // --- NEW LOGIN LOGIC ---
-    // Sign a token for the new user
     const tokenData = { userId: newUser._id };
     const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, {
       expiresIn: "1d",
     });
 
-    // Send the token as a cookie and return the user data, just like in the Login function
+    // Use the dynamic cookie options
+    const finalCookieOptions = {
+      ...cookieOptions,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+    };
+
+    const userToReturn = newUser.toObject();
+    delete userToReturn.password;
+
     return res
       .status(201)
-      .cookie("token", token, { expiresIn: "1d", httpOnly: true })
+      .cookie("token", token, finalCookieOptions)
       .json({
         message: `Welcome, ${newUser.name}!`,
-        user: newUser,
+        user: userToReturn,
         success: true,
       });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res
+        .status(400)
+        .json({
+          message: `${
+            field.charAt(0).toUpperCase() + field.slice(1)
+          } is already taken.`,
+        });
+    }
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
 /**
- * Handles user login with either an email or a username.
+ * OPTIMIZED Handles user login.
  */
 export const Login = async (req, res) => {
   try {
@@ -92,10 +117,9 @@ export const Login = async (req, res) => {
       });
     }
 
-    // Find the user by either their email or username for flexibility.
     const user = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
-    });
+    }).select("+password");
 
     if (!user) {
       return res.status(401).json({
@@ -104,7 +128,6 @@ export const Login = async (req, res) => {
       });
     }
 
-    // Compare the provided password with the hashed password in the database.
     const isMatch = await bcryptjs.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -113,25 +136,106 @@ export const Login = async (req, res) => {
       });
     }
 
-    // If credentials are correct, sign a new JWT.
-    const tokenData = {
-      userId: user._id,
-    };
+    const tokenData = { userId: user._id };
     const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET, {
       expiresIn: "1d",
     });
 
-    // Send the token back as an httpOnly cookie for security.
+    // Use the dynamic cookie options
+    const finalCookieOptions = {
+      ...cookieOptions,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day
+    };
+
+    const userToReturn = user.toObject();
+    delete userToReturn.password;
+
     return res
-      .status(201)
-      .cookie("token", token, { expiresIn: "1d", httpOnly: true })
+      .status(200)
+      .cookie("token", token, finalCookieOptions)
       .json({
-        message: `Welcome back ${user.name}`,
-        user,
+        message: `Welcome back, ${user.name}`,
+        user: userToReturn,
         success: true,
       });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+/**
+ * Handles the "forgot password" request.
+ * In a real app, this would send an email with a reset link.
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Create a short-lived token for password reset
+    const resetToken = jwt.sign(
+      { userId: user._id },
+      process.env.TOKEN_SECRET,
+      {
+        expiresIn: "15m", // Token is valid for 15 minutes
+      }
+    );
+
+    // **For development, we'll just log the token.**
+    // In production, you would use a service like Nodemailer to send an email.
+    console.log(`Password Reset Token for ${email}: ${resetToken}`);
+
+    // Send the token back in the response so you can test it
+    res.status(200).json({
+      message: "Password reset token generated. Check server logs.",
+      resetToken: resetToken, // Sending it back for easy testing
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+/**
+ * Handles the actual password reset.
+ */
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: "New password is required." });
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+    const userId = decoded.userId;
+
+    // Hash the new password with the FAST method
+    const hashedPassword = await bcryptjs.hash(password, 12);
+
+    // Update the user's password in the database
+    await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+    return res.status(200).json({
+      message: "Password has been successfully reset. Please log in.",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      return res.status(401).json({ message: "Invalid or expired token." });
+    }
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
@@ -139,10 +243,12 @@ export const Login = async (req, res) => {
  * Logs out the user by clearing their authentication cookie.
  */
 export const logout = (req, res) => {
-  return res.cookie("token", "", { expiresIn: new Date(Date.now()) }).json({
-    message: "user logged out successfully.",
-    success: true,
-  });
+  return res
+    .cookie("token", "", { ...cookieOptions, expiresIn: new Date(Date.now()) })
+    .json({
+      message: "user logged out successfully.",
+      success: true,
+    });
 };
 
 /**
@@ -201,12 +307,10 @@ export const getMyProfile = async (req, res) => {
 
 /**
  * Fetches a list of other users (excluding the logged-in user).
- * Used for the "Who to Follow" section.
  */
 export const getOtherUsers = async (req, res) => {
   try {
     const { id } = req.params;
-    // Find all users where the ID is "not equal" ($ne) to the logged-in user's ID.
     const otherUsers = await User.find({ _id: { $ne: id } }).select(
       "-password"
     );
@@ -231,7 +335,6 @@ export const follow = async (req, res) => {
     const loggedInUserId = req.user;
     const userId = req.params.id;
 
-    // Prevent a user from following themselves.
     if (loggedInUserId === userId) {
       return res.status(400).json({ message: "You cannot follow yourself." });
     }
@@ -240,11 +343,9 @@ export const follow = async (req, res) => {
     const user = await User.findById(userId);
 
     if (!user.followers.includes(loggedInUserId)) {
-      // Add the follower/following relationship.
       await user.updateOne({ $push: { followers: loggedInUserId } });
       await loggedInUser.updateOne({ $push: { following: userId } });
 
-      // Create a notification for the user who was followed.
       await Notification.create({
         type: "follow",
         fromUser: loggedInUserId,
@@ -255,7 +356,6 @@ export const follow = async (req, res) => {
         message: `User already followed ${user.name}`,
       });
     }
-    // Return the updated profile of the logged-in user for instant UI updates.
     const updatedLoggedInUser = await User.findById(loggedInUserId).select(
       "-password"
     );
@@ -279,7 +379,6 @@ export const unfollow = async (req, res) => {
     const loggedInUser = await User.findById(loggedInUserId);
     const user = await User.findById(userId);
     if (loggedInUser.following.includes(userId)) {
-      // Remove the follower/following relationship.
       await user.updateOne({ $pull: { followers: loggedInUserId } });
       await loggedInUser.updateOne({ $pull: { following: userId } });
     } else {
@@ -287,7 +386,6 @@ export const unfollow = async (req, res) => {
         message: `User has not followed yet`,
       });
     }
-    // Return the updated profile of the logged-in user.
     const updatedLoggedInUser = await User.findById(loggedInUserId).select(
       "-password"
     );
@@ -302,26 +400,21 @@ export const unfollow = async (req, res) => {
 };
 
 /**
- *  Handles updating a user's profile information, including text and images.
+ * Handles updating a user's profile information, including text and images.
  */
-
 export const editProfile = async (req, res) => {
   try {
     const loggedInUserId = req.user;
     const { name, bio } = req.body;
 
-    // Find the user to update.
     const user = await User.findById(loggedInUserId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Update text fields if they were provided.
     if (name) user.name = name;
     if (bio) user.bio = bio;
 
-    // Multer provides uploaded file info in req.files.
-    // We check for 'profileImg' and 'bannerImg' and save their Cloudinary URLs.
     if (req.files) {
       if (req.files.profileImg) {
         user.profileImg = req.files.profileImg[0].path;
@@ -331,10 +424,8 @@ export const editProfile = async (req, res) => {
       }
     }
 
-    // Save the updated user document.
     await user.save();
 
-    // Return the updated user object (without the password).
     const updatedUser = await User.findById(loggedInUserId).select("-password");
 
     return res.status(200).json({
@@ -356,14 +447,10 @@ export const deleteUser = async (req, res) => {
     const loggedInUserId = req.user;
     const userIdToDelete = req.params.id;
 
-    // Security Check: Ensure the logged-in user is deleting their own account.
-    // In a real app, you might also allow an admin to do this.
     if (loggedInUserId.toString() !== userIdToDelete) {
-      return res
-        .status(403)
-        .json({
-          message: "Unauthorized. You can only delete your own account.",
-        });
+      return res.status(403).json({
+        message: "Unauthorized. You can only delete your own account.",
+      });
     }
 
     const userToDelete = await User.findById(userIdToDelete);
@@ -371,44 +458,34 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // --- Start Cleanup Process ---
-
-    // 1. Delete all tweets created by the user
     await Tweet.deleteMany({ userId: userIdToDelete });
 
-    // 2. Delete all notifications related to the user (sent or received)
     await Notification.deleteMany({
       $or: [{ fromUser: userIdToDelete }, { toUser: userIdToDelete }],
     });
 
-    // 3. Remove this user from the 'followers' list of users they were following
     await User.updateMany(
       { _id: { $in: userToDelete.following } },
       { $pull: { followers: userIdToDelete } }
     );
 
-    // 4. Remove this user from the 'following' list of their followers
     await User.updateMany(
       { _id: { $in: userToDelete.followers } },
       { $pull: { following: userIdToDelete } }
     );
 
-    // 5. Remove the user's likes, retweets, and bookmarks from all tweets in the database
     await Tweet.updateMany(
       {},
       {
         $pull: {
           like: userIdToDelete,
           retweetedBy: userIdToDelete,
-          bookmarks: userIdToDelete, // Note: bookmarks are on the user, this is for tweets if you add it there
         },
       }
     );
 
-    // 6. Finally, delete the user document itself
     await User.findByIdAndDelete(userIdToDelete);
 
-    // 7. Clear the authentication cookie
     return res.cookie("token", "", { expiresIn: new Date(Date.now()) }).json({
       message: `User ${userToDelete.username} has been successfully deleted.`,
       success: true,

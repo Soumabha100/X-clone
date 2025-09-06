@@ -6,52 +6,90 @@ import userRoute from "./routes/userRoute.js";
 import tweetRoute from "./routes/tweetRoute.js";
 import notificationRoute from "./routes/notificationRoute.js";
 import cors from "cors";
+import path from "path";
+import helmet from "helmet";
+import morgan from "morgan";
+import errorHandler from "./middleware/errorHandler.js";
 
-// Load environment variables from the .env file.
-dotenv.config({
-  path: ".env",
-});
-
-// Establish the connection to the MongoDB database.
+dotenv.config();
+// ***** START OF DEBUGGING BLOCK *****
+// Add these lines to see what values your Render environment is actually using.
+console.log("--- Verifying Cloudinary Environment Variables ---");
+console.log(
+  "CLOUD_NAME:",
+  process.env.CLOUD_NAME ? "Loaded Successfully" : "ERROR: NOT LOADED"
+);
+console.log(
+  "API_KEY:",
+  process.env.API_KEY ? "Loaded Successfully" : "ERROR: NOT LOADED"
+);
+// For security, we'll only log if the secret exists, not its value.
+console.log(
+  "API_SECRET:",
+  process.env.API_SECRET ? "Loaded Successfully" : "ERROR: NOT LOADED"
+);
+console.log("---------------------------------------------");
+// ***** END OF DEBUGGING BLOCK *****
 databaseConnection();
 
-// Initialize the Express application.
 const app = express();
+const __dirname = path.resolve();
 
-// --- Middlewares ---
-// These functions run for every incoming request.
+app.set("trust proxy", 1);
 
-// Parse URL-encoded bodies (as sent by HTML forms).
+// --- Middleware Setup ---
 app.use(
-  express.urlencoded({
-    extended: true,
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "res.cloudinary.com", "data:"],
+      },
+    },
   })
 );
-// Parse JSON bodies (as sent by API clients).
 app.use(express.json());
-// Parse cookies attached to the client request.
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(morgan("dev"));
 
-// Configure Cross-Origin Resource Sharing (CORS).
+// Your CORS setup is fine, but we can simplify it for this setup.
+// This allows requests from your Render URL and localhost.
 const corsOptions = {
-  // Allow requests only from our frontend's origin.
-  origin: "http://localhost:5173",
-  // Allow cookies to be sent with requests.
+  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   credentials: true,
 };
 app.use(cors(corsOptions));
 
-// --- API Routes ---
-// Mount the routers on their specific base paths.
+// ***** START OF THE FIX *****
+// This is the new middleware to prevent API caching on Render.
+// It will apply the 'no-store' cache policy to all routes starting with /api/v1
+app.use("/api/v1", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+// ***** END OF THE FIX *****
 
-// All routes related to users will be prefixed with /api/v1/user
+// --- API Routes ---
 app.use("/api/v1/user", userRoute);
-// All routes related to tweets will be prefixed with /api/v1/tweet
 app.use("/api/v1/tweet", tweetRoute);
-// All routes related to notifications will be prefixed with /api/v1/notifications
 app.use("/api/v1/notifications", notificationRoute);
 
-// Start the server and listen for incoming requests on the specified port.
-app.listen(process.env.PORT, () => {
-  console.log(`Server listen at port ${process.env.PORT}`);
+// --- Static File Serving & Client-Side Routing for Production ---
+// This part is essential and should NOT be removed.
+if (process.env.NODE_ENV === "production") {
+  const frontendDistPath = path.resolve(__dirname, "..", "frontend", "dist");
+  app.use(express.static(frontendDistPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  });
+}
+
+// --- Centralized Error Handler ---
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`Server listening at port ${PORT}`);
 });

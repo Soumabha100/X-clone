@@ -15,12 +15,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true, // Ensures no two users can have the same username.
+      index: true
     },
     // The user's unique email address, used for login and communication.
     email: {
       type: String,
       required: true,
       unique: true, // Ensures no two users can have the same email.
+      index: true
     },
     // The user's hashed password.
     password: {

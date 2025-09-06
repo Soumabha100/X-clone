@@ -2,35 +2,23 @@ import { Tweet } from "../models/tweetSchema.js";
 import { Notification } from "../models/notificationSchema.js";
 import { User } from "../models/userSchema.js";
 import populateOptions from "../config/populateOptions.js";
-
-// UPDATED createTweet function to handle both image and text-only posts correctly
 import { validationResult } from "express-validator";
 
 //  [CREATE] A NEW TWEET
 export const createTweet = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Return the first validation error message
     return res.status(400).json({ message: errors.array()[0].msg });
   }
 
   try {
     const { description } = req.body;
     const id = req.user;
-
     const imageUrl = req.file ? req.file.path : "";
-
-    if (!description) {
-      return res.status(401).json({
-        message: "Description is required.",
-        success: false,
-      });
-    }
 
     const newTweet = await Tweet.create({
       description,
       userId: id,
-      image: imageUrl,
       image: imageUrl,
     });
 
@@ -52,8 +40,6 @@ export const createTweet = async (req, res) => {
 //  [DELETE] A TWEET
 export const deleteTweet = async (req, res) => {
   try {
-    const { id } = req.params;
-    const loggedInUserId = req.user;
     const { id } = req.params;
     const loggedInUserId = req.user;
 
@@ -140,14 +126,6 @@ export const retweet = async (req, res) => {
       await Tweet.findByIdAndUpdate(tweetId, {
         $push: { retweetedBy: loggedInUserId },
       });
-      const updatedTweet = await Tweet.findById(tweetId).populate(
-        populateOptions
-      );
-      return res.status(200).json({
-        message: "Tweet retweeted successfully.",
-        tweet: updatedTweet,
-      });
-    }
     }
 
     const updatedTweet = await Tweet.findById(tweetId).populate(
@@ -163,28 +141,6 @@ export const retweet = async (req, res) => {
   }
 };
 
-/**
- * Fetches the main feed for a user (their own tweets + tweets from people they follow).
- */
-export const getAllTweets = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const loggedInUser = await User.findById(id);
-
-    if (!loggedInUser) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const feedTweets = await Tweet.find({
-      $or: [
-        { userId: { $in: loggedInUser.following } },
-        { retweetedBy: { $in: [...loggedInUser.following, loggedInUser._id] } },
-      ],
-    })
 //  [READ] GET ALL TWEETS FOR THE FEED (PUBLIC OR FOLLOWING)
 export const getFeedTweets = async (req, res) => {
   try {
@@ -202,23 +158,11 @@ export const getFeedTweets = async (req, res) => {
       if (!loggedInUser) {
         return res.status(404).json({ message: "User not found." });
       }
-      // Efficiently find tweets where the author is in the user's following list
       query = { userId: { $in: loggedInUser.following } };
     }
-    // If feedType is 'public', the query remains empty ({}), fetching all tweets.
 
     const tweets = await Tweet.find(query)
       .populate(populateOptions)
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalTweets = await Tweet.countDocuments({
-      $or: [
-        { userId: { $in: loggedInUser.following } },
-        { retweetedBy: { $in: [...loggedInUser.following, loggedInUser._id] } },
-      ],
-    });
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -226,9 +170,6 @@ export const getFeedTweets = async (req, res) => {
     const totalTweets = await Tweet.countDocuments(query);
 
     return res.status(200).json({
-      tweets: feedTweets,
-      totalPages: Math.ceil(totalTweets / limit),
-      currentPage: page,
       tweets,
       totalPages: Math.ceil(totalTweets / limit),
       currentPage: page,
@@ -239,32 +180,6 @@ export const getFeedTweets = async (req, res) => {
   }
 };
 
-/**
- * Fetches tweets only from users the logged-in user is following.
- */
-export const getFollowingTweets = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const loggedInUser = await User.findById(id);
-
-    const allFollowingTweets = await Tweet.find({
-      userId: { $in: loggedInUser.following },
-    })
-      .populate(populateOptions)
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      tweets: allFollowingTweets,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-/**
- * Fetches all tweets belonging to a specific user's profile.
- */
 //  [READ] GET ALL TWEETS FOR A SPECIFIC USER'S PROFILE
 export const getUserTweets = async (req, res) => {
   try {
@@ -279,38 +194,6 @@ export const getUserTweets = async (req, res) => {
   }
 };
 
-/**
- * Fetches all tweets from all users for the public "For you" feed.
- */
-export const getPublicTweets = async (req, res) => {
-  try {
-    // FIX: Added the missing pagination variable definitions
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const allPublicTweets = await Tweet.find()
-      .populate(populateOptions)
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const totalTweets = await Tweet.countDocuments();
-
-    return res.status(200).json({
-      tweets: allPublicTweets,
-      totalPages: Math.ceil(totalTweets / limit),
-      currentPage: page,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-/**
- * Edits a tweet's description, ensuring only the author can do so.
- */
 //  [UPDATE] EDIT A TWEET
 export const editTweet = async (req, res) => {
   try {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { Link, useParams } from "react-router-dom";
 import Avatar from "react-avatar";
@@ -6,101 +6,77 @@ import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import Tweet from "./Tweet";
-import { setUser, setVisitedProfile } from "../redux/userSlice"; // Import the new action
+import { setUser } from "../redux/userSlice";
 import EditProfileModal from "./EditProfileModal";
-import TweetSkeleton from "./TweetSkeleton"; // Import for smoother loading
+import TweetSkeleton from "./TweetSkeleton";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+
+// This function will be used by React Query to fetch data
+const fetchProfileAndTweets = async (profileUserId) => {
+  const [profileRes, tweetsRes] = await Promise.all([
+    axios.get(`${API_BASE_URL}/user/profile/${profileUserId}`, {
+      withCredentials: true,
+    }),
+    axios.get(`${API_BASE_URL}/tweet/user/${profileUserId}`, {
+      withCredentials: true,
+    }),
+  ]);
+  return { profile: profileRes.data.user, userTweets: tweetsRes.data };
+};
 
 const Profile = () => {
   const { id: profileUserId } = useParams();
   const dispatch = useDispatch();
-
-  // --- THE FIX & OPTIMIZATION ---
-  // 1. Immediately get the profile from the Redux cache if it exists.
-  const profile = useSelector(
-    (store) => store.user.visitedProfiles[profileUserId]
-  );
-
-  const [userTweets, setUserTweets] = useState([]);
+  const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { user: loggedInUser } = useSelector((store) => store.user);
+
+  // --- THE OPTIMIZATION ---
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["profile", profileUserId],
+    queryFn: () => fetchProfileAndTweets(profileUserId),
+  });
+
+  const profile = data?.profile;
+  const userTweets = data?.userTweets || [];
   const isFollowing = loggedInUser?.following.includes(profileUserId);
 
-  const followUnfollowHandler = async () => {
-    if (loggedInUser?._id === profileUserId) return;
-    try {
+  // --- OPTIMIZED FOLLOW/UNFOLLOW with React Query Mutations ---
+  const followUnfollowMutation = useMutation({
+    mutationFn: async () => {
       const endpoint = isFollowing ? "unfollow" : "follow";
       const res = await axios.post(
         `${API_BASE_URL}/user/${endpoint}/${profileUserId}`,
-        { id: loggedInUser?._id },
+        {},
         { withCredentials: true }
       );
-      dispatch(setUser(res.data.user));
-      // Also update the cached profile with new follower data
-      dispatch(
-        setVisitedProfile({
-          profileId: profileUserId,
-          profileData: res.data.otherUser,
-        })
-      );
-      toast.success(res.data.message);
-    } catch (error) {
+      return res.data;
+    },
+    onSuccess: (data) => {
+      // Update the logged-in user's state in Redux
+      dispatch(setUser(data.user));
+      // Invalidate and refetch the profile data to update follower counts
+      queryClient.invalidateQueries(["profile", profileUserId]);
+      toast.success(data.message);
+    },
+    onError: (error) => {
       toast.error(error.response?.data?.message || "An error occurred.");
-    }
-  };
+    },
+  });
 
-  useEffect(() => {
-    const fetchProfileAndTweets = async () => {
-      try {
-        // Fetch both profile and tweets simultaneously for speed
-        const [profileRes, tweetsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/user/profile/${profileUserId}`, {
-            withCredentials: true,
-          }),
-          axios.get(`${API_BASE_URL}/tweet/user/${profileUserId}`, {
-            withCredentials: true,
-          }),
-        ]);
-
-        // 2. Save the newly fetched profile to our Redux cache.
-        dispatch(
-          setVisitedProfile({
-            profileId: profileUserId,
-            profileData: profileRes.data.user,
-          })
-        );
-        setUserTweets(tweetsRes.data);
-      } catch (error) {
-        toast.error("Failed to fetch profile data.");
-        console.error("Fetch profile error:", error);
-      }
-    };
-
-    // 3. Only fetch from the API if the profile isn't already in our cache.
-    if (!profile) {
-      fetchProfileAndTweets();
-    } else {
-      // If profile is cached, we might only need to refresh tweets
-      axios
-        .get(`${API_BASE_URL}/tweet/user/${profileUserId}`, {
-          withCredentials: true,
-        })
-        .then((res) => setUserTweets(res.data))
-        .catch((err) => console.error("Fetch tweets error:", err));
-    }
-  }, [profileUserId, dispatch, profile]);
-
-  // If the profile is not yet loaded, show a clean skeleton UI instead of nothing.
-  if (!profile) {
+  if (isLoading) {
     return (
-      <div className="w-full md:w-[60%] border-l border-r border-neutral-800">
-        <div className="p-4">
-          <TweetSkeleton />
-          <TweetSkeleton />
-          <TweetSkeleton />
-        </div>
+      <div className="w-full md:w-[60%] border-l border-r border-neutral-800 p-4">
+        <TweetSkeleton /> <TweetSkeleton /> <TweetSkeleton />
       </div>
+    );
+  }
+
+  if (isError || !profile) {
+    return (
+      <div className="p-4 text-center w-full">Failed to load profile.</div>
     );
   }
 
@@ -124,12 +100,8 @@ const Profile = () => {
           </div>
           <img
             src={
-              profile.bannerImg
-                ? profile.bannerImg.replace(
-                    "/upload/",
-                    "/upload/w_600,f_auto,q_auto/"
-                  )
-                : "https://placehold.co/600x200/1DA1F2/FFFFFF?text=Banner"
+              profile.bannerImg ||
+              "https://placehold.co/600x200/1DA1F2/FFFFFF?text=Banner"
             }
             alt="banner"
             className="w-full h-48 object-cover bg-neutral-800"
@@ -153,32 +125,12 @@ const Profile = () => {
               </button>
             ) : (
               <button
-                onClick={followUnfollowHandler}
+                onClick={() => followUnfollowMutation.mutate()}
                 className={`px-4 py-1.5 rounded-full font-bold transition-colors duration-200 ${
                   isFollowing
                     ? "bg-transparent text-white border border-gray-500"
                     : "bg-white text-black hover:bg-gray-200"
                 }`}
-                onMouseEnter={(e) => {
-                  if (isFollowing) {
-                    e.currentTarget.textContent = "Unfollow";
-                    e.currentTarget.classList.add(
-                      "bg-red-900/20",
-                      "text-red-500",
-                      "border-red-500"
-                    );
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (isFollowing) {
-                    e.currentTarget.textContent = "Following";
-                    e.currentTarget.classList.remove(
-                      "bg-red-900/20",
-                      "text-red-500",
-                      "border-red-500"
-                    );
-                  }
-                }}
               >
                 {isFollowing ? "Following" : "Follow"}
               </button>

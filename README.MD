@@ -1,6 +1,6 @@
 # X-Clone: A Full-Stack Social Media Platform
 
-![X-Clone Application Showcase](assets/Final%20Video.gif)
+![X-Clone Application Showcase](assets/Project%20X-Clone%20Final%20Video.gif)
 ![Login Page](assets/Pic%201.png)
 ![Home Feed](assets/Pic%202.png)
 ![Profile Page](assets/Pic%203.png)

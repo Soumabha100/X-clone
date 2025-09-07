@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Avatar from "react-avatar";
 import { FaImages, FaTimes, FaPencilAlt } from "react-icons/fa";
 import { HiMiniGif } from "react-icons/hi2";
@@ -6,9 +6,8 @@ import { MdEmojiEmotions } from "react-icons/md";
 import { RiCalendarScheduleFill } from "react-icons/ri";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addTweet } from "../redux/tweetSlice";
-import { useSelector } from "react-redux";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
@@ -18,23 +17,39 @@ const Post = () => {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-
   const dispatch = useDispatch();
   const imageInputRef = useRef(null);
+
+  // --- PROFESSIONAL POLISH ---
+  // This effect will clean up the blob URL to prevent memory leaks
+  // when the component unmounts or the image is changed.
+  useEffect(() => {
+    // This is the cleanup function.
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // If there's an old preview, revoke it first.
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  // A dedicated function to handle removing the image and resetting the input.
   const removeImage = () => {
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
     setImage(null);
     setImagePreview("");
-    // THIS IS THE FIX: We programmatically reset the file input's value.
     if (imageInputRef.current) {
       imageInputRef.current.value = "";
     }
@@ -45,7 +60,6 @@ const Post = () => {
       toast.error("Please enter a description or select an image.");
       return;
     }
-
     setIsUploading(true);
     const formData = new FormData();
     formData.append("description", description);
@@ -63,13 +77,10 @@ const Post = () => {
       toast.success(res.data.message);
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to post tweet.");
-      console.error(error);
     } finally {
       setDescription("");
-      setImage(null);
-      setImagePreview("");
       setIsUploading(false);
-      removeImage();
+      removeImage(); // This will now also handle revoking the URL
     }
   };
 
@@ -88,26 +99,21 @@ const Post = () => {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            // --- ADD THIS onInput HANDLER ---
             onInput={(e) => {
               e.target.style.height = "auto";
               e.target.style.height = `${e.target.scrollHeight}px`;
             }}
-            className="w-full text-lg bg-transparent border-none outline-none resize-none overflow-hidden" // <-- Add overflow-hidden
+            className="w-full text-lg bg-transparent border-none outline-none resize-none overflow-hidden"
             placeholder="What's happening?"
-            rows="1" // <-- Change rows to 1
+            rows="1"
           />
-          {/* --- FINAL CORRECTED Image Preview Section --- */}
           {imagePreview && (
             <div className="relative mt-2">
-              {/* The image is always visible */}
               <img
                 src={imagePreview}
                 alt="Preview"
                 className="w-full h-auto rounded-2xl border border-gray-700"
               />
-
-              {/* Edit button positioned at the top-left */}
               <button
                 onClick={() => imageInputRef.current.click()}
                 className="absolute top-2 left-2 flex items-center space-x-2 bg-black bg-opacity-70 text-white font-semibold py-1 px-3 rounded-full cursor-pointer hover:bg-neutral-800 transition-colors duration-200"
@@ -115,14 +121,8 @@ const Post = () => {
                 <FaPencilAlt size={12} />
                 <span>Edit</span>
               </button>
-
-              {/* Remove button positioned at the top-right */}
               <button
-                onClick={() => {
-                  setImage(null);
-                  setImagePreview("");
-                  removeImage();
-                }}
+                onClick={removeImage}
                 className="absolute top-2 right-2 p-1.5 bg-black bg-opacity-70 rounded-full text-white cursor-pointer hover:bg-neutral-800 transition-colors duration-200"
               >
                 <FaTimes />
@@ -150,7 +150,7 @@ const Post = () => {
         </div>
         <button
           onClick={postTweetHandler}
-          disabled={isUploading}
+          disabled={isUploading || (!description.trim() && !image)}
           className={`px-6 py-2 text-md font-bold text-white bg-blue-500 rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {isUploading ? "Posting..." : "Post"}

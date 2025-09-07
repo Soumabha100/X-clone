@@ -43,7 +43,7 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-        "img-src": ["'self'", "res.cloudinary.com", "data:"],
+        "img-src": ["'self'", "res.cloudinary.com", "data:", "blob:"],
       },
     },
   })

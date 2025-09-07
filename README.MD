@@ -1,123 +1,115 @@
-X-Clone 🐦: A Journey in Full-Stack Development
-Welcome to X-Clone, a passion project born from a love for learning and a fascination with the intricate world of social media. This is more than just a clone; it's a handcrafted, full-stack social media application that captures the essence of X (formerly Twitter), brought to life with the powerful MERN stack (MongoDB, Express.js, React.js, Node.js).
+# X-Clone: A Full-Stack Social Media Platform
 
-This project was built from the ground up to be a canvas for exploring modern web development. It's a testament to the challenges, breakthroughs, and collaborative spirit that define the journey of a developer. We invite you to explore, interact, and see what's possible when curiosity meets code.
+![X-Clone Application Showcase](assets/Final%20Video.gif)
+![Login Page](assets/Pic%201.png)
+![Home Feed](assets/Pic%202.png)
+![Profile Page](assets/Pic%203.png)
+![Notifications Page](assets/Pic%204.png)
+![Trending Section](assets/Pic%205.png)
+![Bookmarks Section](assets/Pic%206.png)
 
-👥 The Team Behind the Code
-This project is the result of the collaborative energy and dedication of a team of aspiring software engineers from the Swami Vivekananda Institute of Science and Technology (SVIST).
+X-Clone is a feature-rich, full-stack social media application engineered to mirror the core functionalities and user experience of X (formerly Twitter). Built on the MERN stack, this project demonstrates a robust, scalable, and high-performance web architecture, from a secure RESTful API to a dynamic, responsive frontend.
 
-Soumabha Majumder
+**Live Application:** **[https://x-clone-api-soumabha.onrender.com](https://x-clone-api-soumabha.onrender.com)**
 
-Tamalika Das
+---
 
-Suman Bera
+## 🏛️ Architectural Overview
 
-Department of Computer Science & Engineering, 2nd Year
+The application is architected with a decoupled frontend and backend, a standard practice for modern, scalable web services.
 
-✨ A Tour of Our Creation (Features)
-We focused on building a feature-rich, intuitive, and robust user experience.
+- **Frontend:** A dynamic Single-Page Application (SPA) built with **React** and **Vite**, deployed on **Vercel** for global content delivery and performance.
+- **Backend:** A secure, stateless RESTful API powered by **Node.js** and **Express.js**, hosted on **Render**.
+- **Database:** A **MongoDB Atlas** cluster serves as the data persistence layer, with schemas designed for efficient data relationships and query performance.
 
-🔐 Seamless & Secure Onboarding: A secure user registration and login system using JWTs stored in httpOnly cookies. New users are automatically logged in after registering, creating a smooth, uninterrupted first experience.
+This architecture ensures a clear separation of concerns, allowing for independent development, scaling, and maintenance of the client and server.
 
-👤 Dynamic User Profiles: Every user has a unique space. View profiles with custom profile & banner images, bios, and real-time follower/following counts.
+---
 
-✍️ Express Yourself (Full Tweet CRUD):
+## ✨ Core Features
 
-Create: Share your thoughts with text and images, uploaded seamlessly to Cloudinary.
+### 1. Authentication & Security
 
-Read: Enjoy a dynamic, dual-mode feed. Choose the algorithmic "For you" tab or the chronological "Following" tab.
+- **Secure JWT Authentication:** Employs JSON Web Tokens stored in `httpOnly` cookies, providing robust protection against XSS attacks. The system is configured with secure, cross-domain policies for production environments.
+- **Full Credential Management:** Includes user registration with validation, login with either email or username, and a secure password reset flow.
 
-Update & Delete: Users have full control to securely edit or delete their own posts.
+### 2. Content & Feed
 
-❤️ A Rich Engagement Ecosystem:
+- **Full Tweet CRUD Functionality:** Users can create (with text and images), read, update, and delete their own posts.
+- **Dual-Mode Content Feed:** The main feed offers two distinct timelines: a public "For you" feed for content discovery and a personalized "Following" feed.
+- **Infinite Scrolling:** Implemented for a smooth, uninterrupted browsing experience on all feeds.
 
-Like, Comment, Retweet: The three pillars of social interaction are fully implemented. Like posts, leave comments in a beautiful modal, and share content with the retweet feature.
+### 3. Social Engagement Ecosystem
 
-Bookmark Your Favorites: Save important or interesting tweets with a single click and revisit them on a dedicated, private Bookmarks page.
+- **User Interaction:** Core social features including liking, commenting, and retweeting are fully implemented.
+- **Bookmarking:** Users can save tweets to a private, dedicated "Bookmarks" page for later viewing.
+- **Social Graph:** A complete follow/unfollow system allows users to curate their own social network.
 
-🔔 Real-Time Notification System:
+### 4. User Experience & Performance
 
-Never miss a moment with notifications for new followers, likes, comments, and retweets.
+- **Optimistic UI Updates:** State is managed globally with **Redux Toolkit**, providing instant UI feedback for actions like liking and following.
+- **High-Performance Data Fetching:** **TanStack Query (React Query)** is used as a caching layer to minimize network requests, resulting in instantaneous page loads for previously visited profiles and a significant reduction in loading states.
+- **Real-Time Notifications:** A notification system alerts users to new followers, likes, and comments, with a dynamic badge in the UI displaying the unread count.
+- **Cloud Media Management:** Image uploads for profiles and posts are handled seamlessly via **Cloudinary**, ensuring fast content delivery and optimized media transformations.
+- **Responsive Design:** The UI is fully responsive, crafted with **Tailwind CSS** to provide an optimal experience across all devices.
 
-A dynamic badge in the sidebar keeps you updated on unread notifications.
+---
 
-📱 Polished & Responsive UI:
+## 🛠️ Tech Stack & Key Libraries
 
-Crafted with Tailwind CSS for a clean, modern aesthetic that looks beautiful on any device.
+| Category             | Technology / Library                                        |
+| -------------------- | ----------------------------------------------------------- |
+| **Frontend**         | `React.js`, `Vite`, `React Router DOM`                      |
+| **State Management** | `Redux Toolkit`, `TanStack Query (React Query)`             |
+| **Styling**          | `Tailwind CSS`                                              |
+| **Backend**          | `Node.js`, `Express.js`                                     |
+| **Database**         | `MongoDB Atlas`, `Mongoose` (with indexing for performance) |
+| **Authentication**   | `JSON Web Tokens (JWT)`, `bcryptjs`, `cookie-parser`        |
+| **API & Networking** | `Axios`, `RESTful Principles`                               |
+| **Image Handling**   | `Cloudinary`, `Multer`                                      |
+| **Deployment**       | `Vercel` (Frontend), `Render` (Backend)                     |
 
-Enhanced with smooth animations, skeleton loaders for a fluid data-fetching experience, and intuitive confirmation modals.
+---
 
-🛠️ Our Digital Blueprint (Tech Stack)
-Frontend: React.js with Vite for a lightning-fast development experience.
+## ⚙️ Local Development Setup
 
-State Management: Redux Toolkit for predictable and scalable state.
+Follow these steps to get the project running on your local machine.
 
-Routing: React Router DOM for seamless client-side navigation.
+1.  **Clone the Repository**
+    ```bash
+    git clone [https://github.com/Soumabha100/X-clone.git](https://github.com/Soumabha100/X-clone.git)
+    cd X-clone
+    ```
+2.  **Backend Setup**
 
-Styling: Tailwind CSS for a modern, utility-first design system.
+    ```bash
+    cd backend
+    npm install
+    ```
 
-API Communication: Axios for handling HTTP requests.
+    Create a `.env` file in the `/backend` directory and add the required environment variables.
 
-Backend: Node.js with the Express.js framework.
+3.  **Frontend Setup**
 
-Database: MongoDB with Mongoose for elegant schema design and data modeling.
+    ```bash
+    cd ../frontend
+    npm install
+    ```
 
-Authentication: JSON Web Tokens (JWT) and bcryptjs for secure password hashing.
+    Create a `.env` file in the `/frontend` directory to specify the backend API URL.
 
-Image Uploads: Multer and Cloudinary for handling media storage in the cloud.
+4.  **Run the Application**
+    - Start the backend server from the `/backend` directory: `npm run dev`
+    - Start the frontend server from the `/frontend` directory: `npm run dev`
 
-⚙️ Getting Started
-Follow these steps to get your local development environment set up and running.
+---
 
-Clone the Repository
+### 👥 Project Authors
 
-Bash
+This project was brought to life by a dedicated team of students from the **Swami Vivekananda Institute of Science and Technology (SVIST)**.
 
-git clone https://github.com/Soumabha100/X-clone.git
-cd X-clone
-Backend Setup
+- **Soumabha Majumder**
+- **Tamalika Das**
+- **Suman Bera**
 
-Bash
-
-# Navigate to the backend directory
-cd backend
-
-# Install dependencies
-npm install
-
-# Create a .env file and add the required variables (see .env.example)
-# PORT, MONGO_URI, TOKEN_SECRET, CLOUD_NAME, API_KEY, API_SECRET
-
-# Start the backend server
-npm run dev
-Frontend Setup
-
-Bash
-
-# Navigate to the frontend directory from the root
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start the frontend development server
-npm run dev
-The application should now be live! The backend will be running on http://localhost:8000 and the frontend on http://localhost:5173.
-
-📡 API Endpoints Overview
-The API is structured around REST principles and secured by a JWT authentication middleware.
-
-User Routes (/api/v1/user): Handles registration, login, logout, profiles, following, bookmarking, and user deletion with data cleanup.
-
-Tweet Routes (/api/v1/tweet): Handles full CRUD for tweets, plus liking, commenting, and retweeting.
-
-Notification Routes (/api/v1/notifications): Handles fetching, clearing, and counting unread notifications.
-
-🚀 Our Learning Journey & Future Horizons
-This project was an incredible learning experience, pushing us to solve real-world problems from database schema design to frontend state management. While we're proud of the final product, our journey as developers is never truly over. Here are some exciting features we envision for the future:
-
-Real-time Updates: Integrating WebSockets (Socket.io) to push live notifications and feed updates to users without needing a refresh.
-
-Direct Messaging: Building a private, real-time chat system between users.
-
-Advanced Search: Implementing a more powerful search for users and tweets.
+_Department of Computer Science & Engineering, 2nd Year_
